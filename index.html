@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#131211">
-<meta name="description" content="BITB - Best In The Bizz">
-<title>BITB</title>
+<meta name="description" content="A minimal team to-do list: a private list for you and shared lists for your team.">
+<title>Team Adonlist</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
 <style>
@@ -105,13 +105,31 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .gate p{color:var(--muted);margin:0;max-width:46ch}
 .notice{padding:12px 14px;border-radius:10px;background:var(--raise);color:var(--muted);font-size:14px}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;max-width:calc(100% - 32px);box-shadow:0 8px 24px rgb(0 0 0 / .25)}
+.namebtn{background:none;border:0;padding:0;color:var(--fg);font-size:13px;font-weight:500;max-width:22ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.namebtn:hover{text-decoration:underline;text-underline-offset:3px}
+#addTask{flex-wrap:wrap}
+#addTask .field{flex:1 1 200px}
+.sel{flex:0 1 auto!important;min-width:0;max-width:100%;padding-right:10px;cursor:pointer}
+.filters{display:flex;gap:6px;flex-wrap:wrap}
+.fchip{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:8px;border:1px solid var(--line);background:none;font-size:13px;color:var(--muted);max-width:100%}
+.fchip .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fchip .n{font:500 11px/1 var(--mono);font-variant-numeric:tabular-nums}
+.fchip.on{border-color:var(--accent);color:var(--fg);background:var(--raise)}
+.group{display:flex;align-items:center;gap:8px;padding:16px 2px 6px;border-bottom:1px solid var(--line);font:600 12px/1 var(--body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.group .n{font:500 11px/1 var(--mono);letter-spacing:0;text-transform:none}
+.group.me{color:var(--accent)}
+.tbody{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.meta{font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+.forme{font:500 10px/1 var(--mono);letter-spacing:.06em;color:var(--accent-ink);background:var(--accent);padding:4px 6px;border-radius:5px;flex:none}
+.task.locked .check{opacity:.35;cursor:not-allowed}
+.task.others .ttext{color:var(--muted)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <div class="brand"><h1>BITB</h1><span>List</span></div>
+    <div class="brand"><h1>Adonlist</h1><span>Team</span></div>
     <div class="me" id="me"></div>
   </header>
 
@@ -128,6 +146,16 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px}
 
   <!-- App -->
   <div id="app" hidden style="display:flex;flex-direction:column;gap:22px">
+    <form id="nameForm" class="sheet" hidden>
+      <h3>Your name</h3>
+      <p class="hint">Pick a name or nickname. Your team sees it on every list instead of your email.</p>
+      <div class="row">
+        <input id="nickname" class="field" maxlength="30" placeholder="e.g. Akash" autocomplete="off">
+        <button class="btn" type="submit">Save</button>
+      </div>
+      <div><button class="link" id="nameCancel" type="button">Not now</button></div>
+    </form>
+
     <nav class="rail" id="rail" aria-label="Lists"></nav>
 
     <form id="newList" class="row" hidden>
@@ -156,10 +184,13 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px}
 
       <div class="confirm" id="confirm" hidden></div>
 
+      <div class="filters" id="filters" role="group" aria-label="Show tasks for" hidden></div>
+
       <div class="meter"><span id="count">0 of 0 done</span><div class="bar"><i id="fill"></i></div></div>
 
       <form id="addTask" class="row">
         <input id="taskText" class="field" placeholder="Add a task" maxlength="200" autocomplete="off">
+        <select id="assignee" class="field sel" aria-label="Who is this task for" hidden></select>
         <button class="btn" type="submit">Add</button>
       </form>
 
@@ -192,7 +223,7 @@ const firebaseConfig = {
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, getDocs, onSnapshot, query, where, arrayUnion, arrayRemove, FieldPath } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, getDocs, onSnapshot, query, where, arrayUnion, arrayRemove, FieldPath } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const $ = id => document.getElementById(id);
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
@@ -203,7 +234,7 @@ const X = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="c
 
 function toast(msg){ const t = $('toast'); t.textContent = msg; t.hidden = false; clearTimeout(toast.h); toast.h = setTimeout(() => t.hidden = true, 3000); }
 function notice(msg){ $('notice').textContent = msg; $('notice').hidden = !msg; }
-function fail(e){ console.error(e); toast(e && e.code === 'permission-denied' ? 'You don’t have access to that list any more.' : 'That didn’t save. Check your connection and try again.'); }
+function fail(e){ console.error(e); toast(e && e.code === 'permission-denied' ? 'You can’t change that. Only the person who added a task and the person it’s for can.' : 'That didn’t save. Check your connection and try again.'); }
 
 if (firebaseConfig.apiKey.startsWith('PASTE')) {
   notice('Setup needed: open index.html and paste your Firebase config at the top of the script.');
@@ -214,9 +245,13 @@ const fb = initializeApp(firebaseConfig);
 const auth = getAuth(fb);
 const db = getFirestore(fb);
 
-let me = null; // { uid, email, name, photo }
-const S = { personal: [], lists: [], tasks: [], sel: 'personal', listsReady: false, peopleOpen: false, confirm: null };
-const subs = { personal: null, lists: null, tasks: null };
+let me = null; // { uid, email, googleName, nickname, name, photo }
+const S = {
+  personal: [], lists: [], tasks: [], sel: 'personal', listsReady: false,
+  peopleOpen: false, confirm: null, filter: 'all', assignee: null,
+  profileReady: false, editingName: false, skipName: false
+};
+const subs = { personal: null, lists: null, tasks: null, profile: null };
 const busy = new Set();
 try { S.sel = localStorage.getItem('adonlist-sel') || 'personal'; } catch (e) {}
 
@@ -224,12 +259,23 @@ try { S.sel = localStorage.getItem('adonlist-sel') || 'personal'; } catch (e) {}
 const current = () => S.sel === 'personal' ? null : S.lists.find(l => l.id === S.sel) || null;
 const taskCol = () => S.sel === 'personal' ? collection(db, 'users', me.uid, 'tasks') : collection(db, 'lists', S.sel, 'tasks');
 const sortTasks = a => [...a].sort((x, y) => (x.done - y.done) || (x.done ? (y.doneAt||0)-(x.doneAt||0) : (x.createdAt||0)-(y.createdAt||0)));
-function profileOf(list, email){ return (list && list.profiles && list.profiles[email]) || null; }
-function avatar(p, fallback, cls = 'av'){
-  if (p && p.photo) { const i = el('img', cls); i.src = p.photo; i.alt = ''; i.referrerPolicy = 'no-referrer'; i.title = p.name || fallback; return i; }
-  const s = el('span', cls, (p && p.name || fallback || '?').trim().charAt(0).toUpperCase()); s.title = (p && p.name) || fallback || ''; return s;
+const profileOf = (list, email) => (list && list.profiles && list.profiles[email]) || null;
+function nameOf(email, list = current()){
+  if (!email) return 'No one';
+  if (me && email === me.email) return me.name;
+  const p = profileOf(list, email);
+  return (p && p.name) || email.split('@')[0];
 }
-const firstName = (p, email) => (p && p.name ? p.name.split(' ')[0] : email.split('@')[0]);
+function avatar(email, list, cls = 'av'){
+  const p = me && email === me.email ? me : profileOf(list, email);
+  const label = nameOf(email, list);
+  if (p && p.photo) { const i = el('img', cls); i.src = p.photo; i.alt = ''; i.referrerPolicy = 'no-referrer'; i.title = label; return i; }
+  const s = el('span', cls, label.trim().charAt(0).toUpperCase()); s.title = label; return s;
+}
+// Members with you first, then in the order they were added.
+const orderedMembers = l => { const m = l.memberEmails || []; return m.includes(me.email) ? [me.email, ...m.filter(e => e !== me.email)] : m; };
+// Only the person who added a task and the person it's for may change it.
+const canChange = t => S.sel === 'personal' || t.createdBy === me.email || (t.assignee || '') === me.email;
 
 async function once(key, fn){ if (busy.has(key)) return; busy.add(key); try { await fn(); } catch (e) { fail(e); } finally { busy.delete(key); } }
 
@@ -248,27 +294,45 @@ function watchTasks(){
 
 function select(id){
   if (S.sel === id) return;
-  S.sel = id; S.peopleOpen = false; S.confirm = null;
+  S.sel = id; S.peopleOpen = false; S.confirm = null; S.filter = 'all'; S.assignee = null;
   try { localStorage.setItem('adonlist-sel', id); } catch (e) {}
-  watchTasks(); render(); saveMyProfile();
+  watchTasks(); render();
 }
 
-// Keep my name and photo on each list I'm in, so teammates see who did what.
-function saveMyProfile(){
-  const l = current(); if (!l) return;
-  const p = profileOf(l, me.email);
-  if (p && p.name === me.name && p.photo === me.photo) return;
-  updateDoc(doc(db, 'lists', l.id), new FieldPath('profiles', me.email), { name: me.name, photo: me.photo }).catch(() => {});
+// Copy my current name and photo onto every list I'm in, so teammates see it everywhere.
+const syncing = new Set();
+function syncProfiles(){
+  if (!me || !S.profileReady) return;
+  S.lists.forEach(l => {
+    const p = profileOf(l, me.email);
+    if (p && p.name === me.name && p.photo === me.photo) return;
+    const key = l.id + '|' + me.name + '|' + me.photo;
+    if (syncing.has(key)) return;
+    syncing.add(key);
+    updateDoc(doc(db, 'lists', l.id), new FieldPath('profiles', me.email), { name: me.name, photo: me.photo })
+      .catch(() => {}).finally(() => syncing.delete(key));
+  });
 }
 
 onAuthStateChanged(auth, u => {
   unsubAll();
   if (!u) { me = null; $('gate').hidden = false; $('app').hidden = true; $('me').replaceChildren(); return; }
-  me = { uid: u.uid, email: (u.email || '').toLowerCase(), name: u.displayName || '', photo: u.photoURL || '' };
+  me = { uid: u.uid, email: (u.email || '').toLowerCase(), googleName: u.displayName || '', nickname: '', photo: u.photoURL || '' };
+  me.name = me.googleName || me.email.split('@')[0];
+  S.profileReady = false;
   $('gate').hidden = true; $('app').hidden = false;
+
+  subs.profile = onSnapshot(doc(db, 'users', me.uid), s => {
+    me.nickname = (s.exists() && s.data().nickname) || '';
+    me.name = me.nickname || me.googleName || me.email.split('@')[0];
+    S.profileReady = true;
+    if (!me.nickname && !S.skipName) openNameForm();
+    render(); syncProfiles();
+  }, () => { S.profileReady = true; render(); });
+
   subs.personal = onSnapshot(collection(db, 'users', me.uid, 'tasks'), s => { S.personal = s.docs.map(d => ({ id: d.id, ...d.data() })); render(); }, fail);
   subs.lists = onSnapshot(query(collection(db, 'lists'), where('memberEmails', 'array-contains', me.email)), s => {
-    S.lists = s.docs.map(d => ({ id: d.id, ...d.data() })); S.listsReady = true; render(); saveMyProfile();
+    S.lists = s.docs.map(d => ({ id: d.id, ...d.data() })); S.listsReady = true; render(); syncProfiles();
   }, fail);
   watchTasks(); render();
 });
@@ -277,18 +341,42 @@ $('signIn').onclick = () => signInWithPopup(auth, new GoogleAuthProvider()).catc
   if (e.code !== 'auth/popup-closed-by-user' && e.code !== 'auth/cancelled-popup-request') toast('Sign-in didn’t work: ' + e.code);
 });
 
+// ---------- name ----------
+function openNameForm(){
+  if (S.editingName) return;
+  S.editingName = true;
+  $('nickname').value = me.nickname || me.googleName || '';
+  render();
+  setTimeout(() => { $('nickname').focus(); $('nickname').select(); }, 0);
+}
+$('nameForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const nickname = $('nickname').value.trim().replace(/\s+/g, ' ');
+  if (!nickname) { toast('Type a name first'); return; }
+  try {
+    await setDoc(doc(db, 'users', me.uid), { nickname }, { merge: true });
+    S.editingName = false; render(); toast('Saved. Your team now sees you as ' + nickname);
+  } catch (err) { fail(err); }
+});
+$('nameCancel').onclick = () => { S.editingName = false; S.skipName = true; render(); };
+
 // ---------- render ----------
 function render(){
   if (!me) return;
   if (S.sel !== 'personal' && S.listsReady && !current()) { S.sel = 'personal'; watchTasks(); }
   const list = current();
   const isPersonal = S.sel === 'personal';
-  const tasks = sortTasks(isPersonal ? S.personal : S.tasks);
+  const all = sortTasks(isPersonal ? S.personal : S.tasks);
+  const members = list ? orderedMembers(list) : [];
+  if (S.filter !== 'all' && !members.includes(S.filter)) S.filter = 'all';
+  const shown = isPersonal || S.filter === 'all' ? all : all.filter(t => (t.assignee || '') === S.filter);
 
   // me
   const meBox = $('me'); meBox.replaceChildren();
+  const nb = el('button', 'namebtn', me.name); nb.type = 'button'; nb.title = 'Change your name'; nb.onclick = openNameForm;
   const so = el('button', 'link', 'Sign out'); so.type = 'button'; so.onclick = () => signOut(auth);
-  meBox.append(el('span', 'nm', me.name || me.email), avatar(me, me.email), so);
+  meBox.append(nb, avatar(me.email, list), so);
+  $('nameForm').hidden = !S.editingName;
 
   // rail
   const rail = $('rail'); rail.replaceChildren();
@@ -311,9 +399,8 @@ function render(){
   if (isPersonal) {
     sub.innerHTML = LOCK; sub.append(el('span', null, 'Only you can see this list'));
   } else if (list) {
-    const emails = list.memberEmails || [];
-    const st = el('div', 'stack'); emails.slice(0, 6).forEach(e => st.append(avatar(profileOf(list, e), e)));
-    const names = emails.map(e => e === me.email ? 'you' : firstName(profileOf(list, e), e));
+    const st = el('div', 'stack'); members.slice(0, 6).forEach(e => st.append(avatar(e, list)));
+    const names = members.map(e => e === me.email ? 'you' : nameOf(e, list));
     sub.append(st, el('span', null, names.length <= 3 ? 'Shared with ' + names.join(', ') : names.length + ' people on this list'));
     const pb = el('button', 'ghost', S.peopleOpen ? 'Done' : 'Add people'); pb.type = 'button';
     pb.onclick = () => { S.peopleOpen = !S.peopleOpen; render(); if (S.peopleOpen) setTimeout(() => $('personEmail').focus(), 0); };
@@ -338,14 +425,13 @@ function render(){
   $('peopleSheet').hidden = !(S.peopleOpen && list);
   if (S.peopleOpen && list) {
     const ul = $('members'); ul.replaceChildren();
-    (list.memberEmails || []).forEach(e => {
-      const p = profileOf(list, e);
+    members.forEach(e => {
+      const joined = e === me.email || !!profileOf(list, e);
       const li = el('li', 'person'); const nm = el('span', 'nm');
-      nm.append(document.createTextNode((p && p.name || e) + (e === me.email ? ' (you)' : '')));
-      if (p && p.name) nm.append(el('span', 'em', e));
-      li.append(avatar(p, e), nm);
+      nm.append(document.createTextNode(nameOf(e, list) + (e === me.email ? ' (you)' : '')), el('span', 'em', e));
+      li.append(avatar(e, list), nm);
       if (e === list.ownerEmail) li.append(el('span', 'tag', 'OWNER'));
-      else if (!p) li.append(el('span', 'tag', 'INVITED'));
+      else if (!joined) li.append(el('span', 'tag', 'INVITED'));
       if (list.ownerEmail === me.email && e !== me.email) {
         const r = el('button', 'link', 'Remove'); r.type = 'button';
         r.onclick = () => once('m' + list.id, () => updateDoc(doc(db, 'lists', list.id), { memberEmails: arrayRemove(e) }));
@@ -355,34 +441,91 @@ function render(){
     });
   }
 
+  // filter chips (shared lists only)
+  const filt = $('filters'); filt.replaceChildren(); filt.hidden = isPersonal || !list;
+  if (!isPersonal && list) {
+    const left = email => all.filter(t => !t.done && (email === 'all' || (t.assignee || '') === email)).length;
+    const chip = (key, label, email) => {
+      const b = el('button', 'fchip' + (S.filter === key ? ' on' : '')); b.type = 'button';
+      b.setAttribute('aria-pressed', S.filter === key);
+      if (email) b.append(avatar(email, list, 'av sm'));
+      b.append(el('span', 't', label), el('span', 'n', String(left(key))));
+      b.onclick = () => { S.filter = key; S.assignee = null; render(); };
+      filt.append(b);
+    };
+    chip('all', 'Everyone', null);
+    members.forEach(e => chip(e, e === me.email ? 'My tasks' : nameOf(e, list), e));
+  }
+
+  // assignee picker (shared lists only)
+  const sel = $('assignee');
+  sel.hidden = isPersonal || !list;
+  if (!isPersonal && list) {
+    const want = S.assignee && members.includes(S.assignee) ? S.assignee : (S.filter !== 'all' ? S.filter : me.email);
+    sel.replaceChildren(...members.map(e => { const o = el('option', null, 'For ' + (e === me.email ? 'me' : nameOf(e, list))); o.value = e; return o; }));
+    sel.value = want;
+  }
+
+  // meter
+  const done = shown.filter(t => t.done).length;
+  $('count').textContent = done + ' of ' + shown.length + ' done';
+  $('fill').style.width = shown.length ? (done / shown.length * 100) + '%' : '0';
+
   // tasks
-  const done = tasks.filter(t => t.done).length;
-  $('count').textContent = done + ' of ' + tasks.length + ' done';
-  $('fill').style.width = tasks.length ? (done / tasks.length * 100) + '%' : '0';
   const ul = $('tasks'); ul.replaceChildren();
-  tasks.forEach(t => {
-    const li = el('li', 'task' + (t.done ? ' done' : ''));
-    const c = el('button', 'check'); c.type = 'button'; c.innerHTML = TICK; c.setAttribute('aria-label', t.done ? 'Mark not done' : 'Mark done');
-    c.onclick = () => toggle(t);
-    li.append(c, el('span', 'ttext', t.text));
+  const taskRow = t => {
+    const can = canChange(t);
+    const mine = (t.assignee || '') === me.email;
+    const li = el('li', 'task' + (t.done ? ' done' : '') + (can ? '' : ' locked') + (!isPersonal && !mine ? ' others' : ''));
+    const c = el('button', 'check'); c.type = 'button'; c.innerHTML = TICK;
+    if (can) { c.setAttribute('aria-label', t.done ? 'Mark not done' : 'Mark done'); c.onclick = () => toggle(t); }
+    else { c.disabled = true; c.title = 'Only ' + nameOf(t.createdBy, list) + (t.assignee && t.assignee !== t.createdBy ? ' or ' + nameOf(t.assignee, list) : '') + ' can tick this'; }
+    const body = el('div', 'tbody');
+    body.append(el('span', 'ttext', t.text));
     if (!isPersonal) {
-      const by = t.done && t.doneBy ? t.doneBy : t.createdBy;
-      if (by) { const a = avatar(profileOf(list, by), by, 'av sm'); a.title = (t.done ? 'Done by ' : 'Added by ') + (profileOf(list, by)?.name || by); li.append(a); }
+      const bits = [];
+      if (S.filter !== 'all') bits.push('For ' + (mine ? 'you' : nameOf(t.assignee, list)));
+      if (t.createdBy && t.createdBy !== t.assignee) bits.push('from ' + (t.createdBy === me.email ? 'you' : nameOf(t.createdBy, list)));
+      if (t.done && t.doneBy) bits.push('done by ' + (t.doneBy === me.email ? 'you' : nameOf(t.doneBy, list)));
+      if (bits.length) { const m = bits.join(' · '); body.append(el('span', 'meta', m.charAt(0).toUpperCase() + m.slice(1))); }
     }
-    const d = el('button', 'del'); d.type = 'button'; d.innerHTML = X; d.setAttribute('aria-label', 'Delete task'); d.onclick = () => removeTask(t);
-    li.append(d); ul.append(li);
-  });
-  const empty = $('empty'); empty.hidden = tasks.length > 0; empty.replaceChildren(
-    el('b', null, isPersonal ? 'Your personal list is empty' : 'This shared list is empty'),
-    document.createTextNode(isPersonal ? 'Do some work' : 'Do some work'));
+    li.append(c, body);
+    if (!isPersonal && mine && !t.done && S.filter === 'all') li.append(el('span', 'forme', 'YOU'));
+    if (can) { const d = el('button', 'del'); d.type = 'button'; d.innerHTML = X; d.setAttribute('aria-label', 'Delete task'); d.onclick = () => removeTask(t); li.append(d); }
+    return li;
+  };
+
+  if (!isPersonal && S.filter === 'all' && list) {
+    // Group by who the task is for: you first, then each member, then anything unassigned.
+    const keys = [...members];
+    shown.forEach(t => { const k = t.assignee || ''; if (!keys.includes(k)) keys.push(k); });
+    keys.forEach(k => {
+      const group = shown.filter(t => (t.assignee || '') === k);
+      if (!group.length) return;
+      const h = el('li', 'group' + (k === me.email ? ' me' : ''));
+      h.append(el('span', null, k === me.email ? 'For you' : k ? 'For ' + nameOf(k, list) : 'Not assigned'),
+               el('span', 'n', group.filter(t => !t.done).length + ' left'));
+      ul.append(h, ...group.map(taskRow));
+    });
+  } else {
+    shown.forEach(t => ul.append(taskRow(t)));
+  }
+
+  const empty = $('empty'); empty.hidden = shown.length > 0;
+  if (isPersonal) empty.replaceChildren(el('b', null, 'Your personal list is empty'), document.createTextNode('Add a task above. Nobody else can see it.'));
+  else if (S.filter !== 'all') empty.replaceChildren(el('b', null, S.filter === me.email ? 'Nothing assigned to you' : 'Nothing assigned to ' + nameOf(S.filter, list)), document.createTextNode('Tasks for this person show up here.'));
+  else empty.replaceChildren(el('b', null, 'This shared list is empty'), document.createTextNode('Add a task above and pick who it’s for. Everyone on the list sees it.'));
+
+  const clearable = shown.filter(t => t.done && canChange(t)).length;
   $('foot').hidden = done === 0;
-  $('footNote').textContent = (tasks.length - done) + ' left';
-  $('clearDone').textContent = 'Clear ' + done + ' done';
+  $('footNote').textContent = (shown.length - done) + ' left';
+  $('clearDone').hidden = clearable === 0;
+  $('clearDone').textContent = 'Clear ' + clearable + ' done';
 }
 
 // ---------- actions ----------
-function toggle(t){ once(t.id, () => updateDoc(doc(taskCol(), t.id), t.done ? { done: false, doneBy: null, doneAt: null } : { done: true, doneBy: me.email, doneAt: Date.now() })); }
-function removeTask(t){ once(t.id, () => deleteDoc(doc(taskCol(), t.id))); }
+function toggle(t){ if (!canChange(t)) return; once(t.id, () => updateDoc(doc(taskCol(), t.id), t.done ? { done: false, doneBy: null, doneAt: null } : { done: true, doneBy: me.email, doneAt: Date.now() })); }
+function removeTask(t){ if (!canChange(t)) return; once(t.id, () => deleteDoc(doc(taskCol(), t.id))); }
 
 async function leaveList(l){
   S.confirm = null;
@@ -399,11 +542,15 @@ async function deleteList(l){
   select('personal'); toast('List deleted');
 }
 
+$('assignee').addEventListener('change', e => { S.assignee = e.target.value; });
+
 $('addTask').addEventListener('submit', e => {
   e.preventDefault();
   const text = $('taskText').value.trim(); if (!text || !me) return;
+  const data = { text, done: false, createdAt: Date.now(), createdBy: me.email };
+  if (S.sel !== 'personal') data.assignee = $('assignee').value || me.email;
   $('taskText').value = '';
-  addDoc(taskCol(), { text, done: false, createdAt: Date.now(), createdBy: me.email }).catch(err => { $('taskText').value = text; fail(err); });
+  addDoc(taskCol(), data).catch(err => { $('taskText').value = text; fail(err); });
 });
 
 $('newList').addEventListener('submit', async e => {
@@ -415,7 +562,8 @@ $('newList').addEventListener('submit', async e => {
       profiles: { [me.email]: { name: me.name, photo: me.photo } }
     });
     $('newListName').value = ''; $('newList').hidden = true;
-    S.sel = ref.id; try { localStorage.setItem('adonlist-sel', ref.id); } catch (e) {}
+    S.sel = ref.id; S.filter = 'all'; S.assignee = null;
+    try { localStorage.setItem('adonlist-sel', ref.id); } catch (e) {}
     S.peopleOpen = true; watchTasks(); render();
   } catch (err) { fail(err); }
 });
@@ -430,7 +578,11 @@ $('addPerson').addEventListener('submit', e => {
   once('m' + l.id, async () => { await updateDoc(doc(db, 'lists', l.id), { memberEmails: arrayUnion(email) }); toast('Added ' + email); });
 });
 
-$('clearDone').onclick = () => (S.sel === 'personal' ? S.personal : S.tasks).filter(t => t.done).forEach(removeTask);
+$('clearDone').onclick = () => {
+  const list = S.sel === 'personal' ? S.personal : S.tasks;
+  const visible = S.sel === 'personal' || S.filter === 'all' ? list : list.filter(t => (t.assignee || '') === S.filter);
+  visible.filter(t => t.done && canChange(t)).forEach(removeTask);
+};
 </script>
 </body>
 </html>
