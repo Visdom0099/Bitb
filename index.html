@@ -374,7 +374,7 @@ function render(){
   });
   const empty = $('empty'); empty.hidden = tasks.length > 0; empty.replaceChildren(
     el('b', null, isPersonal ? 'Your personal list is empty' : 'This shared list is empty'),
-    document.createTextNode(isPersonal ? 'Add a task above. Nobody else can see it.' : 'Add a task above. Everyone on this list sees it right away.'));
+    document.createTextNode(isPersonal ? 'Do some work' : 'Do some work'));
   $('foot').hidden = done === 0;
   $('footNote').textContent = (tasks.length - done) + ' left';
   $('clearDone').textContent = 'Clear ' + done + ' done';
