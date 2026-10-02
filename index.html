@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#131211">
-<meta name="description" content="BITB - Best In The Bizz">
+<meta name="description" content="A minimal team to-do list: a private list for you and shared lists for your team.">
 <title>BITB List</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
@@ -148,9 +148,6 @@ body{font-size:17px}
 
 #addTask .btn{padding-block:12px}
 @media (max-width:520px){#addTask .field:not(.sel){flex-basis:100%}#addTask .sel{flex:1 1 auto!important}}
-.lockbtn{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;font-size:13px}
-.lockbtn svg{width:14px;height:14px}
-.lockbtn.on{border-color:var(--accent);color:var(--accent)}
 .pinned-note{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px 16px;text-align:center;color:var(--muted)}
 .pinned-note b{color:var(--fg);font:700 26px/1.2 var(--display)}
 body.mini .pinned-note b{font-size:18px}
@@ -179,10 +176,6 @@ body.mini .gate h2{font-size:28px}
       <button class="ghost floatbtn" id="floatBtn" type="button" hidden title="Keep the list floating on top of every app">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1.5" y="2.5" width="13" height="11" rx="1.5"/><rect x="8" y="8" width="5" height="4" rx=".8" fill="currentColor"/></svg>
         <span id="floatLabel">Float</span>
-      </button>
-      <button class="ghost lockbtn" id="lockBtn" type="button" hidden>
-        <svg id="lockIco" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path id="lockShackle" d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>
-        <span id="lockLabel">Pin</span>
       </button>
     </div>
     <div class="brand"><h1>BITB List</h1></div>
@@ -262,8 +255,8 @@ body.mini .gate h2{font-size:28px}
 </div>
 <div class="toast" id="toast" hidden></div>
 <div class="pinned-note" id="pinnedNote" hidden>
-  <b>BITB List is pinned on top</b>
-  <span>It stays above every app. Click the lock in it to unpin.</span>
+  <b>BITB List is floating</b>
+  <span>It stays on top of every app. Close it with the × on its top bar, or click below.</span>
   <button class="btn big" id="unpinBtn" type="button">Bring it back here</button>
 </div>
 
@@ -426,63 +419,43 @@ $('nameForm').addEventListener('submit', async e => {
 $('nameCancel').onclick = () => { S.editingName = false; S.skipName = true; render(); };
 
 // ---------- floating window ----------
-// Locked  = Chrome's always-on-top window (Document Picture-in-Picture).
-// Unlocked = a normal small window: drag it anywhere, it goes behind other apps when you click them.
+// Float = Chrome's always-on-top window (Document Picture-in-Picture).
 const canPin = 'documentPictureInPicture' in window;
-const SHACKLE_CLOSED = 'M5.5 7V5a2.5 2.5 0 0 1 5 0v2';
-const SHACKLE_OPEN = 'M5.5 7V5a2.5 2.5 0 0 1 5 0';
 
 function openMini(){
   const w = window.open(location.pathname + '?mini=1', 'bitb-mini', 'popup,width=420,height=680,left=' + (screen.availWidth - 460) + ',top=80');
-  if (!w) { toast('Chrome blocked the window. Click the icon at the right of the address bar and allow pop-ups for this site.'); return false; }
-  w.focus(); return true;
+  if (!w) toast('Chrome blocked the window. Click the icon at the right of the address bar and allow pop-ups for this site.');
+  else w.focus();
 }
 
 async function pin(){
   if (pipWin) return;
-  if (!canPin) { toast('This browser can’t keep windows on top. Use Chrome or Edge on a computer.'); return; }
   try { pipWin = await window.documentPictureInPicture.requestWindow({ width: 420, height: 680 }); }
-  catch (e) { pipWin = null; toast('Couldn’t pin the window.'); return; }
+  catch (e) { pipWin = null; toast('Couldn’t open the floating window.'); return; }
   const pd = pipWin.document;
   pd.title = 'BITB List';
   document.querySelectorAll('link[rel="stylesheet"], style').forEach(n => pd.head.append(n.cloneNode(true)));
   pd.body.classList.add('mini');
   pd.body.append(document.querySelector('.wrap'), document.getElementById('toast'));
   document.getElementById('pinnedNote').hidden = false;
-  if (MINI) { try { window.resizeTo(360, 260); } catch (e) {} }
   pipWin.addEventListener('pagehide', () => {
     const pdoc = pipWin.document;
     document.body.prepend(pdoc.querySelector('.wrap'));
     document.body.append(pdoc.getElementById('toast'));
     pipWin = null;
     document.getElementById('pinnedNote').hidden = true;
-    if (MINI) { try { window.resizeTo(420, 680); } catch (e) {} }
     render();
   });
   render();
 }
 
-function unpin(){
-  if (!pipWin) return;
-  // From the main page, unpinning hands over to the normal small window.
-  if (!MINI && !openMini()) return;
-  pipWin.close();
-}
-
+// Browsers without always-on-top support (Safari, Firefox) get a normal small window instead.
 $('floatBtn').onclick = () => canPin ? pin() : openMini();
-$('lockBtn').onclick = () => pipWin ? unpin() : pin();
 $('unpinBtn').onclick = () => { if (pipWin) pipWin.close(); };
 
 function renderFloatControls(){
-  const floating = MINI || !!pipWin;
-  $('floatBtn').hidden = floating;
-  $('floatBtn').title = 'Float the list on top of your other apps';
-  $('lockBtn').hidden = !floating || !canPin;
-  const locked = !!pipWin;
-  $('lockBtn').classList.toggle('on', locked);
-  $('lockLabel').textContent = locked ? 'Pinned' : 'Pin';
-  $('lockShackle').setAttribute('d', locked ? SHACKLE_CLOSED : SHACKLE_OPEN);
-  $('lockBtn').title = locked ? 'Pinned on top of every app. Click to unpin.' : 'Pin on top of every app';
+  $('floatBtn').hidden = MINI || !!pipWin;
+  $('floatBtn').title = 'Float the list on top of every app';
 }
 renderFloatControls();
 
@@ -714,4 +687,3 @@ $('clearDone').onclick = () => {
 </script>
 </body>
 </html>
-```
