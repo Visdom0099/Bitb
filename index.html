@@ -160,4 +160,488 @@ body.mini .field{padding:11px 12px}
 body.mini .task{padding:11px 2px;gap:10px}
 body.mini .av{width:24px;height:24px}
 body.mini .gate{min-height:0;padding-block:20px}
-body.
+body.mini .gate h2{font-size:28px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="hleft">
+      <button class="ghost floatbtn" id="floatBtn" type="button" hidden title="Keep the list floating on top of every app">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1.5" y="2.5" width="13" height="11" rx="1.5"/><rect x="8" y="8" width="5" height="4" rx=".8" fill="currentColor"/></svg>
+        <span id="floatLabel">Float</span>
+      </button>
+    </div>
+    <div class="brand"><h1>BITB List</h1></div>
+    <div class="me" id="me"></div>
+  </header>
+
+  <div id="notice" class="notice" hidden></div>
+
+  <!-- Signed-out screen -->
+  <section class="gate" id="gate" hidden>
+    <h2>Your list, and your team's.</h2>
+    <p>A private list only you can see, plus shared lists everyone you add can see and tick off together.</p>
+    <div><button class="btn big" id="signIn" type="button">
+      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>
+      Sign in with Google</button></div>
+  </section>
+
+  <!-- App -->
+  <div id="app" hidden style="display:flex;flex-direction:column;gap:22px">
+    <form id="nameForm" class="sheet" hidden>
+      <h3>Your name</h3>
+      <p class="hint">Pick a name or nickname. Your team sees it on every list instead of your email.</p>
+      <div class="row">
+        <input id="nickname" class="field" maxlength="30" placeholder="e.g. Akash" autocomplete="off">
+        <button class="btn" type="submit">Save</button>
+      </div>
+      <div><button class="link" id="nameCancel" type="button">Not now</button></div>
+    </form>
+
+    <nav class="rail" id="rail" aria-label="Lists"></nav>
+
+    <form id="newList" class="row" hidden>
+      <input id="newListName" class="field" placeholder="Name the shared list, e.g. Channel launch" maxlength="60" autocomplete="off">
+      <button class="btn" type="submit">Create</button>
+    </form>
+
+    <section class="panel">
+      <div class="phead">
+        <div style="min-width:0">
+          <h2 id="title">Personal</h2>
+          <div class="sub" id="sub"></div>
+        </div>
+        <div class="actions" id="actions"></div>
+      </div>
+
+      <div class="sheet" id="peopleSheet" hidden>
+        <h3>People on this list</h3>
+        <ul class="people" id="members"></ul>
+        <form id="addPerson" class="row">
+          <input id="personEmail" class="field" type="email" placeholder="Their Google email address" autocomplete="off">
+          <button class="btn" type="submit">Add</button>
+        </form>
+        <p class="hint">They'll see this list the next time they sign in here with that email. Send them the link to this site.</p>
+      </div>
+
+      <div class="confirm" id="confirm" hidden></div>
+
+      <div class="filters" id="filters" role="group" aria-label="Show tasks for" hidden></div>
+
+      <div class="meter"><span id="count">0 of 0 done</span><div class="bar"><i id="fill"></i></div></div>
+
+      <form id="addTask" class="row">
+        <input id="taskText" class="field" placeholder="Add a task" maxlength="200" autocomplete="off">
+        <select id="assignee" class="field sel" aria-label="Who is this task for" hidden></select>
+        <button class="btn" type="submit">Add</button>
+      </form>
+
+      <ul class="tasks" id="tasks"></ul>
+      <div class="empty" id="empty"></div>
+
+      <div class="foot" id="foot" hidden>
+        <span class="hint" id="footNote"></span>
+        <button class="link" id="clearDone" type="button"></button>
+      </div>
+    </section>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+
+<script type="module">
+/* ============================================================
+   1. PASTE YOUR FIREBASE CONFIG HERE
+   Firebase console > Project settings > General > Your apps > Web app > Config
+   ============================================================ */
+const firebaseConfig = {
+  apiKey: "AIzaSyDSEiAFP13S0tpVUbsc_wZcNwIiLqrs9yw",
+  authDomain: "bitb-list.firebaseapp.com",
+  projectId: "bitb-list",
+  storageBucket: "bitb-list.firebasestorage.app",
+  messagingSenderId: "78554327362",
+  appId: "1:78554327362:web:840fabd8deafe852ff00db"
+};
+/* ============================================================ */
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, getDocs, onSnapshot, query, where, arrayUnion, arrayRemove, FieldPath } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const $ = id => document.getElementById(id);
+const MINI = new URLSearchParams(location.search).has('mini');
+if (MINI) document.body.classList.add('mini');
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+const LOCK = '<svg class="ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>';
+const PEOPLE = '<svg class="ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="6" cy="5.5" r="2.5"/><path d="M1.5 14c.5-2.6 2.3-4 4.5-4s4 1.4 4.5 4"/><circle cx="11.5" cy="6" r="2"/><path d="M11 10c1.9 0 3.2 1.1 3.5 3.5"/></svg>';
+const TICK = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3.2 3L13 4.5"/></svg>';
+const X = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>';
+
+function toast(msg){ const t = $('toast'); t.textContent = msg; t.hidden = false; clearTimeout(toast.h); toast.h = setTimeout(() => t.hidden = true, 3000); }
+function notice(msg){ $('notice').textContent = msg; $('notice').hidden = !msg; }
+function fail(e){ console.error(e); toast(e && e.code === 'permission-denied' ? 'You can’t change that. Only the person who added a task and the person it’s for can.' : 'That didn’t save. Check your connection and try again.'); }
+
+if (firebaseConfig.apiKey.startsWith('PASTE')) {
+  notice('Setup needed: open index.html and paste your Firebase config at the top of the script.');
+  throw new Error('Firebase config missing');
+}
+
+const fb = initializeApp(firebaseConfig);
+const auth = getAuth(fb);
+const db = getFirestore(fb);
+
+let me = null; // { uid, email, googleName, nickname, name, photo }
+const S = {
+  personal: [], lists: [], tasks: [], sel: 'personal', listsReady: false,
+  peopleOpen: false, confirm: null, filter: 'all', assignee: null,
+  profileReady: false, editingName: false, skipName: false
+};
+const subs = { personal: null, lists: null, tasks: null, profile: null };
+const busy = new Set();
+try { S.sel = localStorage.getItem('adonlist-sel') || 'personal'; } catch (e) {}
+
+// ---------- helpers ----------
+const current = () => S.sel === 'personal' ? null : S.lists.find(l => l.id === S.sel) || null;
+const taskCol = () => S.sel === 'personal' ? collection(db, 'users', me.uid, 'tasks') : collection(db, 'lists', S.sel, 'tasks');
+const sortTasks = a => [...a].sort((x, y) => (x.done - y.done) || (x.done ? (y.doneAt||0)-(x.doneAt||0) : (x.createdAt||0)-(y.createdAt||0)));
+const profileOf = (list, email) => (list && list.profiles && list.profiles[email]) || null;
+function nameOf(email, list = current()){
+  if (!email) return 'No one';
+  if (me && email === me.email) return me.name;
+  const p = profileOf(list, email);
+  return (p && p.name) || email.split('@')[0];
+}
+function avatar(email, list, cls = 'av'){
+  const p = me && email === me.email ? me : profileOf(list, email);
+  const label = nameOf(email, list);
+  if (p && p.photo) { const i = el('img', cls); i.src = p.photo; i.alt = ''; i.referrerPolicy = 'no-referrer'; i.title = label; return i; }
+  const s = el('span', cls, label.trim().charAt(0).toUpperCase()); s.title = label; return s;
+}
+// Members with you first, then in the order they were added.
+const orderedMembers = l => { const m = l.memberEmails || []; return m.includes(me.email) ? [me.email, ...m.filter(e => e !== me.email)] : m; };
+// Only the person who added a task and the person it's for may change it.
+const canChange = t => S.sel === 'personal' || t.createdBy === me.email || (t.assignee || '') === me.email;
+
+async function once(key, fn){ if (busy.has(key)) return; busy.add(key); try { await fn(); } catch (e) { fail(e); } finally { busy.delete(key); } }
+
+// ---------- subscriptions ----------
+function unsubAll(){ Object.keys(subs).forEach(k => { subs[k] && subs[k](); subs[k] = null; }); }
+
+function watchTasks(){
+  subs.tasks && subs.tasks(); subs.tasks = null; S.tasks = [];
+  if (S.sel === 'personal') return;
+  const id = S.sel;
+  subs.tasks = onSnapshot(collection(db, 'lists', id, 'tasks'), s => {
+    if (S.sel !== id) return;
+    S.tasks = s.docs.map(d => ({ id: d.id, ...d.data() })); render();
+  }, () => {});
+}
+
+function select(id){
+  if (S.sel === id) return;
+  S.sel = id; S.peopleOpen = false; S.confirm = null; S.filter = 'all'; S.assignee = null;
+  try { localStorage.setItem('adonlist-sel', id); } catch (e) {}
+  watchTasks(); render();
+}
+
+// Copy my current name and photo onto every list I'm in, so teammates see it everywhere.
+const syncing = new Set();
+function syncProfiles(){
+  if (!me || !S.profileReady) return;
+  S.lists.forEach(l => {
+    const p = profileOf(l, me.email);
+    if (p && p.name === me.name && p.photo === me.photo) return;
+    const key = l.id + '|' + me.name + '|' + me.photo;
+    if (syncing.has(key)) return;
+    syncing.add(key);
+    updateDoc(doc(db, 'lists', l.id), new FieldPath('profiles', me.email), { name: me.name, photo: me.photo })
+      .catch(() => {}).finally(() => syncing.delete(key));
+  });
+}
+
+onAuthStateChanged(auth, u => {
+  unsubAll();
+  if (!u) { me = null; $('gate').hidden = false; $('app').hidden = true; $('me').replaceChildren(); return; }
+  me = { uid: u.uid, email: (u.email || '').toLowerCase(), googleName: u.displayName || '', nickname: '', photo: u.photoURL || '' };
+  me.name = me.googleName || me.email.split('@')[0];
+  S.profileReady = false;
+  $('gate').hidden = true; $('app').hidden = false;
+
+  subs.profile = onSnapshot(doc(db, 'users', me.uid), s => {
+    me.nickname = (s.exists() && s.data().nickname) || '';
+    me.name = me.nickname || me.googleName || me.email.split('@')[0];
+    S.profileReady = true;
+    if (!me.nickname && !S.skipName) openNameForm();
+    render(); syncProfiles();
+  }, () => { S.profileReady = true; render(); });
+
+  subs.personal = onSnapshot(collection(db, 'users', me.uid, 'tasks'), s => { S.personal = s.docs.map(d => ({ id: d.id, ...d.data() })); render(); }, fail);
+  subs.lists = onSnapshot(query(collection(db, 'lists'), where('memberEmails', 'array-contains', me.email)), s => {
+    S.lists = s.docs.map(d => ({ id: d.id, ...d.data() })); S.listsReady = true; render(); syncProfiles();
+  }, fail);
+  watchTasks(); render();
+});
+
+$('signIn').onclick = () => signInWithPopup(auth, new GoogleAuthProvider()).catch(e => {
+  if (e.code !== 'auth/popup-closed-by-user' && e.code !== 'auth/cancelled-popup-request') toast('Sign-in didn’t work: ' + e.code);
+});
+
+// ---------- name ----------
+function openNameForm(){
+  if (S.editingName) return;
+  S.editingName = true;
+  $('nickname').value = me.nickname || me.googleName || '';
+  render();
+  setTimeout(() => { $('nickname').focus(); $('nickname').select(); }, 0);
+}
+$('nameForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const nickname = $('nickname').value.trim().replace(/\s+/g, ' ');
+  if (!nickname) { toast('Type a name first'); return; }
+  try {
+    await setDoc(doc(db, 'users', me.uid), { nickname }, { merge: true });
+    S.editingName = false; render(); toast('Saved. Your team now sees you as ' + nickname);
+  } catch (err) { fail(err); }
+});
+$('nameCancel').onclick = () => { S.editingName = false; S.skipName = true; render(); };
+
+// ---------- floating mini window ----------
+// A normal small Chrome window: drag it anywhere; it comes to the front only when you click it.
+$('floatBtn').hidden = false;
+$('floatLabel').textContent = MINI ? 'Close' : 'Float';
+$('floatBtn').title = MINI ? 'Close the mini window' : 'Open the list in a small window you can move anywhere';
+$('floatBtn').onclick = () => {
+  if (MINI) { window.close(); return; }
+  const w = window.open(location.pathname + '?mini=1', 'bitb-mini', 'popup,width=420,height=680,left=' + (screen.availWidth - 460) + ',top=80');
+  if (!w) toast('Chrome blocked the window. Click the icon at the right of the address bar and allow pop-ups for this site.');
+  else w.focus();
+};
+
+// ---------- render ----------
+function render(){
+  if (!me) return;
+  if (S.sel !== 'personal' && S.listsReady && !current()) { S.sel = 'personal'; watchTasks(); }
+  const list = current();
+  const isPersonal = S.sel === 'personal';
+  const all = sortTasks(isPersonal ? S.personal : S.tasks);
+  const members = list ? orderedMembers(list) : [];
+  if (S.filter !== 'all' && !members.includes(S.filter)) S.filter = 'all';
+  const shown = isPersonal || S.filter === 'all' ? all : all.filter(t => (t.assignee || '') === S.filter);
+
+  // me
+  const meBox = $('me'); meBox.replaceChildren();
+  const nb = el('button', 'namebtn', me.name); nb.type = 'button'; nb.title = 'Change your name'; nb.onclick = openNameForm;
+  const so = el('button', 'link', 'Sign out'); so.type = 'button'; so.onclick = () => signOut(auth);
+  meBox.append(nb, avatar(me.email, list), so);
+  $('nameForm').hidden = !S.editingName;
+
+  // rail
+  const rail = $('rail'); rail.replaceChildren();
+  const pc = el('button', 'chip' + (isPersonal ? ' on' : '')); pc.type = 'button';
+  pc.innerHTML = LOCK; pc.append(el('span', 't', 'Personal'), el('span', 'n', String(S.personal.filter(t => !t.done).length)));
+  pc.onclick = () => select('personal'); rail.append(pc);
+  [...S.lists].sort((a, b) => (a.createdAt||0) - (b.createdAt||0)).forEach(l => {
+    const c = el('button', 'chip' + (S.sel === l.id ? ' on' : '')); c.type = 'button';
+    c.innerHTML = PEOPLE; c.append(el('span', 't', l.name), el('span', 'n', String((l.memberEmails||[]).length)));
+    c.onclick = () => select(l.id); rail.append(c);
+  });
+  const add = el('button', 'chip add', '+ New shared list'); add.type = 'button';
+  add.onclick = () => { $('newList').hidden = !$('newList').hidden; if (!$('newList').hidden) $('newListName').focus(); };
+  rail.append(add);
+
+  // header
+  $('title').textContent = isPersonal ? 'Personal' : (list ? list.name : 'Loading…');
+  const sub = $('sub'); sub.replaceChildren();
+  const actions = $('actions'); actions.replaceChildren();
+  if (isPersonal) {
+    sub.innerHTML = LOCK; sub.append(el('span', null, 'Only you can see this list'));
+  } else if (list) {
+    const st = el('div', 'stack'); members.slice(0, 6).forEach(e => st.append(avatar(e, list)));
+    const names = members.map(e => e === me.email ? 'you' : nameOf(e, list));
+    sub.append(st, el('span', null, names.length <= 3 ? 'Shared with ' + names.join(', ') : names.length + ' people on this list'));
+    const pb = el('button', 'ghost', S.peopleOpen ? 'Done' : 'Add people'); pb.type = 'button';
+    pb.onclick = () => { S.peopleOpen = !S.peopleOpen; render(); if (S.peopleOpen) setTimeout(() => $('personEmail').focus(), 0); };
+    actions.append(pb);
+    const isOwner = list.ownerEmail === me.email;
+    const b = el('button', 'ghost danger', isOwner ? 'Delete list' : 'Leave'); b.type = 'button';
+    b.onclick = () => { S.confirm = isOwner ? 'delete' : 'leave'; render(); };
+    actions.append(b);
+  }
+
+  // confirm
+  const cf = $('confirm'); cf.replaceChildren(); cf.hidden = !(S.confirm && list);
+  if (S.confirm && list) {
+    cf.append(el('span', null, S.confirm === 'delete' ? 'Delete “' + list.name + '” and all its tasks for everyone?' : 'Leave “' + list.name + '”? Someone on the list can add you back.'));
+    const yes = el('button', 'ghost danger', S.confirm === 'delete' ? 'Delete' : 'Leave'); yes.type = 'button';
+    yes.onclick = () => S.confirm === 'delete' ? deleteList(list) : leaveList(list);
+    const no = el('button', 'ghost', 'Cancel'); no.type = 'button'; no.onclick = () => { S.confirm = null; render(); };
+    cf.append(yes, no);
+  }
+
+  // people
+  $('peopleSheet').hidden = !(S.peopleOpen && list);
+  if (S.peopleOpen && list) {
+    const ul = $('members'); ul.replaceChildren();
+    members.forEach(e => {
+      const joined = e === me.email || !!profileOf(list, e);
+      const li = el('li', 'person'); const nm = el('span', 'nm');
+      nm.append(document.createTextNode(nameOf(e, list) + (e === me.email ? ' (you)' : '')), el('span', 'em', e));
+      li.append(avatar(e, list), nm);
+      if (e === list.ownerEmail) li.append(el('span', 'tag', 'OWNER'));
+      else if (!joined) li.append(el('span', 'tag', 'INVITED'));
+      if (list.ownerEmail === me.email && e !== me.email) {
+        const r = el('button', 'link', 'Remove'); r.type = 'button';
+        r.onclick = () => once('m' + list.id, () => updateDoc(doc(db, 'lists', list.id), { memberEmails: arrayRemove(e) }));
+        li.append(r);
+      }
+      ul.append(li);
+    });
+  }
+
+  // filter chips (shared lists only)
+  const filt = $('filters'); filt.replaceChildren(); filt.hidden = isPersonal || !list;
+  if (!isPersonal && list) {
+    const left = email => all.filter(t => !t.done && (email === 'all' || (t.assignee || '') === email)).length;
+    const chip = (key, label, email) => {
+      const b = el('button', 'fchip' + (S.filter === key ? ' on' : '')); b.type = 'button';
+      b.setAttribute('aria-pressed', S.filter === key);
+      if (email) b.append(avatar(email, list, 'av sm'));
+      b.append(el('span', 't', label), el('span', 'n', String(left(key))));
+      b.onclick = () => { S.filter = key; S.assignee = null; render(); };
+      filt.append(b);
+    };
+    chip('all', 'Everyone', null);
+    members.forEach(e => chip(e, e === me.email ? 'My tasks' : nameOf(e, list), e));
+  }
+
+  // assignee picker (shared lists only)
+  const sel = $('assignee');
+  sel.hidden = isPersonal || !list;
+  if (!isPersonal && list) {
+    const want = S.assignee && members.includes(S.assignee) ? S.assignee : (S.filter !== 'all' ? S.filter : me.email);
+    sel.replaceChildren(...members.map(e => { const o = el('option', null, 'For ' + (e === me.email ? 'me' : nameOf(e, list))); o.value = e; return o; }));
+    sel.value = want;
+  }
+
+  // meter
+  const done = shown.filter(t => t.done).length;
+  $('count').textContent = done + ' of ' + shown.length + ' done';
+  $('fill').style.width = shown.length ? (done / shown.length * 100) + '%' : '0';
+
+  // tasks
+  const ul = $('tasks'); ul.replaceChildren();
+  const taskRow = t => {
+    const can = canChange(t);
+    const mine = (t.assignee || '') === me.email;
+    const li = el('li', 'task' + (t.done ? ' done' : '') + (can ? '' : ' locked') + (!isPersonal && !mine ? ' others' : ''));
+    const c = el('button', 'check'); c.type = 'button'; c.innerHTML = TICK;
+    if (can) { c.setAttribute('aria-label', t.done ? 'Mark not done' : 'Mark done'); c.onclick = () => toggle(t); }
+    else { c.disabled = true; c.title = 'Only ' + nameOf(t.createdBy, list) + (t.assignee && t.assignee !== t.createdBy ? ' or ' + nameOf(t.assignee, list) : '') + ' can tick this'; }
+    const body = el('div', 'tbody');
+    body.append(el('span', 'ttext', t.text));
+    if (!isPersonal) {
+      const bits = [];
+      if (S.filter !== 'all') bits.push('For ' + (mine ? 'you' : nameOf(t.assignee, list)));
+      if (t.createdBy && t.createdBy !== t.assignee) bits.push('from ' + (t.createdBy === me.email ? 'you' : nameOf(t.createdBy, list)));
+      if (t.done && t.doneBy) bits.push('done by ' + (t.doneBy === me.email ? 'you' : nameOf(t.doneBy, list)));
+      if (bits.length) { const m = bits.join(' · '); body.append(el('span', 'meta', m.charAt(0).toUpperCase() + m.slice(1))); }
+    }
+    li.append(c, body);
+    if (!isPersonal && mine && !t.done && S.filter === 'all') li.append(el('span', 'forme', 'YOU'));
+    if (can) { const d = el('button', 'del'); d.type = 'button'; d.innerHTML = X; d.setAttribute('aria-label', 'Delete task'); d.onclick = () => removeTask(t); li.append(d); }
+    return li;
+  };
+
+  if (!isPersonal && S.filter === 'all' && list) {
+    // Group by who the task is for: you first, then each member, then anything unassigned.
+    const keys = [...members];
+    shown.forEach(t => { const k = t.assignee || ''; if (!keys.includes(k)) keys.push(k); });
+    keys.forEach(k => {
+      const group = shown.filter(t => (t.assignee || '') === k);
+      if (!group.length) return;
+      const h = el('li', 'group' + (k === me.email ? ' me' : ''));
+      h.append(el('span', null, k === me.email ? 'For you' : k ? 'For ' + nameOf(k, list) : 'Not assigned'),
+               el('span', 'n', group.filter(t => !t.done).length + ' left'));
+      ul.append(h, ...group.map(taskRow));
+    });
+  } else {
+    shown.forEach(t => ul.append(taskRow(t)));
+  }
+
+  const empty = $('empty'); empty.hidden = shown.length > 0;
+  if (isPersonal) empty.replaceChildren(el('b', null, 'Your personal list is empty'), document.createTextNode('Add a task above. Nobody else can see it.'));
+  else if (S.filter !== 'all') empty.replaceChildren(el('b', null, S.filter === me.email ? 'Nothing assigned to you' : 'Nothing assigned to ' + nameOf(S.filter, list)), document.createTextNode('Tasks for this person show up here.'));
+  else empty.replaceChildren(el('b', null, 'This shared list is empty'), document.createTextNode('Add a task above and pick who it’s for. Everyone on the list sees it.'));
+
+  const clearable = shown.filter(t => t.done && canChange(t)).length;
+  $('foot').hidden = done === 0;
+  $('footNote').textContent = (shown.length - done) + ' left';
+  $('clearDone').hidden = clearable === 0;
+  $('clearDone').textContent = 'Clear ' + clearable + ' done';
+}
+
+// ---------- actions ----------
+function toggle(t){ if (!canChange(t)) return; once(t.id, () => updateDoc(doc(taskCol(), t.id), t.done ? { done: false, doneBy: null, doneAt: null } : { done: true, doneBy: me.email, doneAt: Date.now() })); }
+function removeTask(t){ if (!canChange(t)) return; once(t.id, () => deleteDoc(doc(taskCol(), t.id))); }
+
+async function leaveList(l){
+  S.confirm = null;
+  await once('m' + l.id, () => updateDoc(doc(db, 'lists', l.id), { memberEmails: arrayRemove(me.email) }));
+  select('personal'); toast('You left “' + l.name + '”');
+}
+async function deleteList(l){
+  S.confirm = null;
+  await once('m' + l.id, async () => {
+    const snap = await getDocs(collection(db, 'lists', l.id, 'tasks'));
+    await Promise.all(snap.docs.map(d => deleteDoc(d.ref)));
+    await deleteDoc(doc(db, 'lists', l.id));
+  });
+  select('personal'); toast('List deleted');
+}
+
+$('assignee').addEventListener('change', e => { S.assignee = e.target.value; });
+
+$('addTask').addEventListener('submit', e => {
+  e.preventDefault();
+  const text = $('taskText').value.trim(); if (!text || !me) return;
+  const data = { text, done: false, createdAt: Date.now(), createdBy: me.email };
+  if (S.sel !== 'personal') data.assignee = $('assignee').value || me.email;
+  $('taskText').value = '';
+  addDoc(taskCol(), data).catch(err => { $('taskText').value = text; fail(err); });
+});
+
+$('newList').addEventListener('submit', async e => {
+  e.preventDefault();
+  const name = $('newListName').value.trim(); if (!name) return;
+  try {
+    const ref = await addDoc(collection(db, 'lists'), {
+      name, ownerEmail: me.email, memberEmails: [me.email], createdAt: Date.now(),
+      profiles: { [me.email]: { name: me.name, photo: me.photo } }
+    });
+    $('newListName').value = ''; $('newList').hidden = true;
+    S.sel = ref.id; S.filter = 'all'; S.assignee = null;
+    try { localStorage.setItem('adonlist-sel', ref.id); } catch (e) {}
+    S.peopleOpen = true; watchTasks(); render();
+  } catch (err) { fail(err); }
+});
+
+$('addPerson').addEventListener('submit', e => {
+  e.preventDefault();
+  const l = current(); if (!l) return;
+  const email = $('personEmail').value.trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { toast('Enter a full email address, like name@gmail.com'); return; }
+  if ((l.memberEmails || []).includes(email)) { toast('They’re already on this list'); return; }
+  $('personEmail').value = '';
+  once('m' + l.id, async () => { await updateDoc(doc(db, 'lists', l.id), { memberEmails: arrayUnion(email) }); toast('Added ' + email); });
+});
+
+$('clearDone').onclick = () => {
+  const list = S.sel === 'personal' ? S.personal : S.tasks;
+  const visible = S.sel === 'personal' || S.filter === 'all' ? list : list.filter(t => (t.assignee || '') === S.filter);
+  visible.filter(t => t.done && canChange(t)).forEach(removeTask);
+};
+</script>
+</body>
+</html>
