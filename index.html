@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#131211">
-<meta name="description" content="BITB - Best In The Bizz ">
+<meta name="description" content="BITB - Best In The Bizz">
 <title>BITB List</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
@@ -124,6 +124,12 @@ header .me{justify-self:end;display:flex;align-items:center;gap:10px;color:var(-
 .forme{font:500 10px/1 var(--mono);letter-spacing:.06em;color:var(--accent-ink);background:var(--accent);padding:4px 6px;border-radius:5px;flex:none}
 .task.locked .check{opacity:.35;cursor:not-allowed}
 .task.others .ttext{color:var(--muted)}
+.who{display:inline-flex;align-items:center;gap:6px;flex:none;max-width:40%;padding:3px 10px 3px 3px;border:1px solid var(--line);border-radius:999px;font-size:13px;color:var(--muted)}
+.who .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.who .av{width:20px!important;height:20px!important;font-size:9px}
+.who.me{color:var(--accent);border-color:var(--accent)}
+.from{display:inline-flex;align-items:center;gap:5px}
+.from .ico{width:12px;height:12px}
 /* Bigger interface on the full page */
 body{font-size:17px}
 .wrap{max-width:780px;gap:26px;padding-block:40px 80px}
@@ -186,7 +192,7 @@ body.mini .gate h2{font-size:28px}
 
   <!-- Signed-out screen -->
   <section class="gate" id="gate" hidden>
-    <h2>Your list, and your team's.</h2>
+    <h2>BITB - Best In The Bizz</h2>
     <p>A private list only you can see, plus shared lists everyone you add can see and tick off together.</p>
     <div><button class="btn big" id="signIn" type="button">
       <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>
@@ -307,8 +313,10 @@ let me = null; // { uid, email, googleName, nickname, name, photo }
 const S = {
   personal: [], lists: [], tasks: [], sel: 'personal', listsReady: false,
   peopleOpen: false, confirm: null, filter: 'all', assignee: null,
-  profileReady: false, editingName: false, skipName: false
+  profileReady: false, editingName: false, skipName: false,
+  assigned: {}  // listId -> tasks in that shared list assigned to me
 };
+const assignedSubs = new Map();
 const subs = { personal: null, lists: null, tasks: null, profile: null };
 const busy = new Set();
 try { S.sel = localStorage.getItem('adonlist-sel') || 'personal'; } catch (e) {}
@@ -316,6 +324,14 @@ try { S.sel = localStorage.getItem('adonlist-sel') || 'personal'; } catch (e) {}
 // ---------- helpers ----------
 const current = () => S.sel === 'personal' ? null : S.lists.find(l => l.id === S.sel) || null;
 const taskCol = () => S.sel === 'personal' ? collection(db, 'users', me.uid, 'tasks') : collection(db, 'lists', S.sel, 'tasks');
+// Where a task lives: your own personal task, or a task inside a shared list.
+const refOf = t => t._list ? doc(db, 'lists', t._list, 'tasks', t.id) : doc(db, 'users', me.uid, 'tasks', t.id);
+const listById = id => S.lists.find(l => l.id === id) || null;
+// Personal = your own tasks + every shared-list task given to you.
+const personalAll = () => [
+  ...S.personal.map(t => ({ ...t, _list: null })),
+  ...Object.entries(S.assigned).flatMap(([lid, arr]) => listById(lid) ? arr.map(t => ({ ...t, _list: lid })) : [])
+];
 const sortTasks = a => [...a].sort((x, y) => (x.done - y.done) || (x.done ? (y.doneAt||0)-(x.doneAt||0) : (x.createdAt||0)-(y.createdAt||0)));
 const profileOf = (list, email) => (list && list.profiles && list.profiles[email]) || null;
 function nameOf(email, list = current()){
@@ -333,12 +349,27 @@ function avatar(email, list, cls = 'av'){
 // Members with you first, then in the order they were added.
 const orderedMembers = l => { const m = l.memberEmails || []; return m.includes(me.email) ? [me.email, ...m.filter(e => e !== me.email)] : m; };
 // Only the person who added a task and the person it's for may change it.
-const canChange = t => S.sel === 'personal' || t.createdBy === me.email || (t.assignee || '') === me.email;
+const canChange = t => !t._list || t.createdBy === me.email || (t.assignee || '') === me.email;
 
 async function once(key, fn){ if (busy.has(key)) return; busy.add(key); try { await fn(); } catch (e) { fail(e); } finally { busy.delete(key); } }
 
 // ---------- subscriptions ----------
-function unsubAll(){ Object.keys(subs).forEach(k => { subs[k] && subs[k](); subs[k] = null; }); }
+function unsubAll(){
+  Object.keys(subs).forEach(k => { subs[k] && subs[k](); subs[k] = null; });
+  assignedSubs.forEach(u => u()); assignedSubs.clear(); S.assigned = {};
+}
+
+// Watch each shared list for tasks given to me, so they also show in my Personal list.
+function syncAssigned(){
+  const ids = new Set(S.lists.map(l => l.id));
+  assignedSubs.forEach((u, id) => { if (!ids.has(id)) { u(); assignedSubs.delete(id); delete S.assigned[id]; } });
+  ids.forEach(id => {
+    if (assignedSubs.has(id)) return;
+    assignedSubs.set(id, onSnapshot(query(collection(db, 'lists', id, 'tasks'), where('assignee', '==', me.email)), s => {
+      S.assigned[id] = s.docs.map(d => ({ id: d.id, ...d.data() })); render();
+    }, () => {}));
+  });
+}
 
 function watchTasks(){
   subs.tasks && subs.tasks(); subs.tasks = null; S.tasks = [];
@@ -390,7 +421,7 @@ onAuthStateChanged(auth, u => {
 
   subs.personal = onSnapshot(collection(db, 'users', me.uid, 'tasks'), s => { S.personal = s.docs.map(d => ({ id: d.id, ...d.data() })); render(); }, fail);
   subs.lists = onSnapshot(query(collection(db, 'lists'), where('memberEmails', 'array-contains', me.email)), s => {
-    S.lists = s.docs.map(d => ({ id: d.id, ...d.data() })); S.listsReady = true; render(); syncProfiles();
+    S.lists = s.docs.map(d => ({ id: d.id, ...d.data() })); S.listsReady = true; syncAssigned(); render(); syncProfiles();
   }, fail);
   watchTasks(); render();
 });
@@ -465,7 +496,7 @@ function render(){
   if (S.sel !== 'personal' && S.listsReady && !current()) { S.sel = 'personal'; watchTasks(); }
   const list = current();
   const isPersonal = S.sel === 'personal';
-  const all = sortTasks(isPersonal ? S.personal : S.tasks);
+  const all = sortTasks(isPersonal ? personalAll() : S.tasks.map(t => ({ ...t, _list: S.sel })));
   const members = list ? orderedMembers(list) : [];
   if (S.filter !== 'all' && !members.includes(S.filter)) S.filter = 'all';
   const shown = isPersonal || S.filter === 'all' ? all : all.filter(t => (t.assignee || '') === S.filter);
@@ -482,7 +513,7 @@ function render(){
   // rail
   const rail = $('rail'); rail.replaceChildren();
   const pc = el('button', 'chip' + (isPersonal ? ' on' : '')); pc.type = 'button';
-  pc.innerHTML = LOCK; pc.append(el('span', 't', 'Personal'), el('span', 'n', String(S.personal.filter(t => !t.done).length)));
+  pc.innerHTML = LOCK; pc.append(el('span', 't', 'Personal'), el('span', 'n', String(personalAll().filter(t => !t.done).length)));
   pc.onclick = () => select('personal'); rail.append(pc);
   [...S.lists].sort((a, b) => (a.createdAt||0) - (b.createdAt||0)).forEach(l => {
     const c = el('button', 'chip' + (S.sel === l.id ? ' on' : '')); c.type = 'button';
@@ -576,48 +607,47 @@ function render(){
   const ul = $('tasks'); ul.replaceChildren();
   const taskRow = t => {
     const can = canChange(t);
+    const tl = t._list ? listById(t._list) : null;
     const mine = (t.assignee || '') === me.email;
     const li = el('li', 'task' + (t.done ? ' done' : '') + (can ? '' : ' locked') + (!isPersonal && !mine ? ' others' : ''));
     const c = el('button', 'check'); c.type = 'button'; c.innerHTML = TICK;
     if (can) { c.setAttribute('aria-label', t.done ? 'Mark not done' : 'Mark done'); c.onclick = () => toggle(t); }
-    else { c.disabled = true; c.title = 'Only ' + nameOf(t.createdBy, list) + (t.assignee && t.assignee !== t.createdBy ? ' or ' + nameOf(t.assignee, list) : '') + ' can tick this'; }
+    else { c.disabled = true; c.title = 'Only ' + nameOf(t.createdBy, tl) + (t.assignee && t.assignee !== t.createdBy ? ' or ' + nameOf(t.assignee, tl) : '') + ' can tick this'; }
     const body = el('div', 'tbody');
     body.append(el('span', 'ttext', t.text));
-    if (!isPersonal) {
-      const bits = [];
-      if (S.filter !== 'all') bits.push('For ' + (mine ? 'you' : nameOf(t.assignee, list)));
-      if (t.createdBy && t.createdBy !== t.assignee) bits.push('from ' + (t.createdBy === me.email ? 'you' : nameOf(t.createdBy, list)));
-      if (t.done && t.doneBy) bits.push('done by ' + (t.doneBy === me.email ? 'you' : nameOf(t.doneBy, list)));
-      if (bits.length) { const m = bits.join(' · '); body.append(el('span', 'meta', m.charAt(0).toUpperCase() + m.slice(1))); }
+    const bits = [];
+    if (isPersonal && tl) {
+      // A task someone gave you in a shared list.
+      if (t.createdBy && t.createdBy !== me.email) bits.push('From ' + nameOf(t.createdBy, tl));
+      bits.push(tl.name);
+    } else if (!isPersonal) {
+      if (t.createdBy && t.createdBy !== t.assignee) bits.push('From ' + (t.createdBy === me.email ? 'you' : nameOf(t.createdBy, tl)));
+      if (t.done && t.doneBy) bits.push('done by ' + (t.doneBy === me.email ? 'you' : nameOf(t.doneBy, tl)));
+    }
+    if (bits.length) {
+      const m = el('span', 'meta');
+      if (isPersonal && tl) { const f = el('span', 'from'); f.innerHTML = PEOPLE; f.append(document.createTextNode(bits.join(' · '))); m.append(f); }
+      else m.textContent = bits.join(' · ');
+      body.append(m);
     }
     li.append(c, body);
-    if (!isPersonal && mine && !t.done && S.filter === 'all') li.append(el('span', 'forme', 'YOU'));
+    if (!isPersonal && t.assignee) {
+      // Who the task is for, in the same row.
+      const w = el('span', 'who' + (mine ? ' me' : ''));
+      w.append(avatar(t.assignee, tl, 'av sm'), el('span', 'nm', mine ? 'You' : nameOf(t.assignee, tl)));
+      li.append(w);
+    }
     if (can) { const d = el('button', 'del'); d.type = 'button'; d.innerHTML = X; d.setAttribute('aria-label', 'Delete task'); d.onclick = () => removeTask(t); li.append(d); }
     return li;
   };
-
-  if (!isPersonal && S.filter === 'all' && list) {
-    // Group by who the task is for: you first, then each member, then anything unassigned.
-    const keys = [...members];
-    shown.forEach(t => { const k = t.assignee || ''; if (!keys.includes(k)) keys.push(k); });
-    keys.forEach(k => {
-      const group = shown.filter(t => (t.assignee || '') === k);
-      if (!group.length) return;
-      const h = el('li', 'group' + (k === me.email ? ' me' : ''));
-      h.append(el('span', null, k === me.email ? 'For you' : k ? 'For ' + nameOf(k, list) : 'Not assigned'),
-               el('span', 'n', group.filter(t => !t.done).length + ' left'));
-      ul.append(h, ...group.map(taskRow));
-    });
-  } else {
-    shown.forEach(t => ul.append(taskRow(t)));
-  }
+  shown.forEach(t => ul.append(taskRow(t)));
 
   const empty = $('empty'); empty.hidden = shown.length > 0;
-  if (isPersonal) empty.replaceChildren(el('b', null, 'Your personal list is empty'), document.createTextNode('Add a task above. Nobody else can see it.'));
+  if (isPersonal) empty.replaceChildren(el('b', null, 'Your personal list is empty'), document.createTextNode('Tasks you add here are only for you. Tasks people give you in shared lists show up here too.'));
   else if (S.filter !== 'all') empty.replaceChildren(el('b', null, S.filter === me.email ? 'Nothing assigned to you' : 'Nothing assigned to ' + nameOf(S.filter, list)), document.createTextNode('Tasks for this person show up here.'));
   else empty.replaceChildren(el('b', null, 'This shared list is empty'), document.createTextNode('Add a task above and pick who it’s for. Everyone on the list sees it.'));
 
-  const clearable = shown.filter(t => t.done && canChange(t)).length;
+  const clearable = shown.filter(t => t.done && canChange(t) && !(isPersonal && t._list)).length;
   $('foot').hidden = done === 0;
   $('footNote').textContent = (shown.length - done) + ' left';
   $('clearDone').hidden = clearable === 0;
@@ -625,8 +655,8 @@ function render(){
 }
 
 // ---------- actions ----------
-function toggle(t){ if (!canChange(t)) return; once(t.id, () => updateDoc(doc(taskCol(), t.id), t.done ? { done: false, doneBy: null, doneAt: null } : { done: true, doneBy: me.email, doneAt: Date.now() })); }
-function removeTask(t){ if (!canChange(t)) return; once(t.id, () => deleteDoc(doc(taskCol(), t.id))); }
+function toggle(t){ if (!canChange(t)) return; once(t.id, () => updateDoc(refOf(t), t.done ? { done: false, doneBy: null, doneAt: null } : { done: true, doneBy: me.email, doneAt: Date.now() })); }
+function removeTask(t){ if (!canChange(t)) return; once(t.id, () => deleteDoc(refOf(t))); }
 
 async function leaveList(l){
   S.confirm = null;
@@ -680,7 +710,8 @@ $('addPerson').addEventListener('submit', e => {
 });
 
 $('clearDone').onclick = () => {
-  const list = S.sel === 'personal' ? S.personal : S.tasks;
+  // In Personal, only clear your own tasks; shared-list tasks stay in their list.
+  const list = S.sel === 'personal' ? S.personal.map(t => ({ ...t, _list: null })) : S.tasks.map(t => ({ ...t, _list: S.sel }));
   const visible = S.sel === 'personal' || S.filter === 'all' ? list : list.filter(t => (t.assignee || '') === S.filter);
   visible.filter(t => t.done && canChange(t)).forEach(removeTask);
 };
