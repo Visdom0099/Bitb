@@ -74,16 +74,16 @@ header .me{justify-self:end;display:flex;align-items:center;gap:10px;color:var(-
 .bar{flex:1;height:4px;background:var(--line);border-radius:2px;overflow:hidden}
 .bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .3s ease}
 
-.tasks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;border-top:1px solid var(--line)}
-.task{display:flex;align-items:center;gap:12px;padding:12px 2px;border-bottom:1px solid var(--line)}
+.s{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.{display:flex;align-items:center;gap:12px;padding:12px 2px;border-bottom:1px solid var(--line)}
 .check{width:22px;height:22px;flex:none;border-radius:6px;border:1.5px solid var(--muted);background:none;display:grid;place-items:center;padding:0}
 .check svg{width:13px;height:13px;opacity:0}
-.task.done .check{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
-.task.done .check svg{opacity:1}
+..done .check{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+..done .check svg{opacity:1}
 .ttext{flex:1;min-width:0;overflow-wrap:anywhere}
-.task.done .ttext{color:var(--muted);text-decoration:line-through}
+..done .ttext{color:var(--muted);text-decoration:line-through}
 .del{background:none;border:0;color:var(--muted);padding:4px;opacity:0;border-radius:6px;display:grid;place-items:center}
-.task:hover .del,.del:focus-visible{opacity:1}
+.:hover .del,.del:focus-visible{opacity:1}
 @media (hover:none){.del{opacity:.6}}
 .del:hover{color:var(--danger)}
 
@@ -108,8 +108,8 @@ header .me{justify-self:end;display:flex;align-items:center;gap:10px;color:var(-
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;max-width:calc(100% - 32px);box-shadow:0 8px 24px rgb(0 0 0 / .25)}
 .namebtn{background:none;border:0;padding:0;color:var(--fg);font-size:13px;font-weight:500;max-width:22ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .namebtn:hover{text-decoration:underline;text-underline-offset:3px}
-#addTask{flex-wrap:wrap}
-#addTask .field{flex:1 1 200px}
+#add{flex-wrap:wrap}
+#add .field{flex:1 1 200px}
 .sel{flex:0 1 auto!important;min-width:0;max-width:100%;padding-right:10px;cursor:pointer}
 .filters{display:flex;gap:6px;flex-wrap:wrap}
 .fchip{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:8px;border:1px solid var(--line);background:none;font-size:13px;color:var(--muted);max-width:100%}
@@ -122,8 +122,8 @@ header .me{justify-self:end;display:flex;align-items:center;gap:10px;color:var(-
 .tbody{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 .meta{font-size:12px;color:var(--muted);overflow-wrap:anywhere}
 .forme{font:500 10px/1 var(--mono);letter-spacing:.06em;color:var(--accent-ink);background:var(--accent);padding:4px 6px;border-radius:5px;flex:none}
-.task.locked .check{opacity:.35;cursor:not-allowed}
-.task.others .ttext{color:var(--muted)}
+..locked .check{opacity:.35;cursor:not-allowed}
+..others .ttext{color:var(--muted)}
 .who{display:inline-flex;align-items:center;gap:6px;flex:none;max-width:40%;padding:3px 10px 3px 3px;border:1px solid var(--line);border-radius:999px;font-size:13px;color:var(--muted)}
 .who .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .who .av{width:20px!important;height:20px!important;font-size:9px}
@@ -141,7 +141,7 @@ body{font-size:17px}
 .sub{font-size:14px}
 .field{padding:14px 16px}
 .btn{padding:0 22px}
-.task{padding:15px 2px;gap:14px}
+.{padding:15px 2px;gap:14px}
 .check{width:24px;height:24px}
 .meta{font-size:13px}
 .fchip{font-size:14px;padding:7px 12px}
@@ -152,8 +152,8 @@ body{font-size:17px}
 .floatbtn{display:inline-flex;align-items:center;gap:7px}
 .floatbtn svg{width:15px;height:15px}
 
-#addTask .btn{padding-block:12px}
-@media (max-width:520px){#addTask .field:not(.sel){flex-basis:100%}#addTask .sel{flex:1 1 auto!important}}
+#add .btn{padding-block:12px}
+@media (max-width:520px){#add .field:not(.sel){flex-basis:100%}#add .sel{flex:1 1 auto!important}}
 .pinned-note{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px 16px;text-align:center;color:var(--muted)}
 .pinned-note b{color:var(--fg);font:700 26px/1.2 var(--display)}
 body.mini .pinned-note b{font-size:18px}
@@ -168,7 +168,7 @@ body.mini header .me,body.mini .phead,body.mini .meter,body.mini #empty,body.min
 body.mini .brand h1{font-size:28px}
 body.mini .chip{font-size:15px;padding:7px 13px}
 body.mini .field{padding:11px 12px}
-body.mini .task{padding:11px 2px;gap:10px}
+body.mini .{padding:11px 2px;gap:10px}
 body.mini .av{width:24px;height:24px}
 body.mini .gate{min-height:0;padding-block:20px}
 body.mini .gate h2{font-size:28px}
@@ -643,7 +643,7 @@ function render(){
   shown.forEach(t => ul.append(taskRow(t)));
 
   const empty = $('empty'); empty.hidden = shown.length > 0;
-  if (isPersonal) empty.replaceChildren(el('b', null, 'Your personal list is empty'), document.createTextNode('Tasks you add here are only for you. Tasks people give you in shared lists show up here too.'));
+  if (isPersonal) empty.replaceChildren(el('b', null, 'Your personal list is empty'), document.createTextNode(''));
   else if (S.filter !== 'all') empty.replaceChildren(el('b', null, S.filter === me.email ? 'Nothing assigned to you' : 'Nothing assigned to ' + nameOf(S.filter, list)), document.createTextNode('Tasks for this person show up here.'));
   else empty.replaceChildren(el('b', null, 'This shared list is empty'), document.createTextNode('Add a task above and pick who it’s for. Everyone on the list sees it.'));
 
