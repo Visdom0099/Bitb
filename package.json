@@ -1,0 +1,8 @@
+{
+  "name": "bitb-list",
+  "private": true,
+  "engines": { "node": "20.x" },
+  "dependencies": {
+    "firebase-admin": "^12.1.0"
+  }
+}
