@@ -17,7 +17,7 @@ h1{font-size:clamp(22px,3.4vw,38px);font-weight:700;text-align:center;margin:8px
 @media (max-width:760px){.tabs{grid-template-columns:1fr 1fr}.tabs>div:nth-child(3){border-left:0}.tabs>div{border-top:1px solid var(--border)}}
 .chartwrap{position:relative;padding:28px 8px 8px 16px}
 svg{display:block;width:100%;height:auto;overflow:visible}
-.tick{fill:var(--muted);font-size:14px}
+.tick{fill:var(--muted);font-size:13px}
 .hit{cursor:pointer}
 .tip{position:absolute;pointer-events:none;background:#1b1b1b;border:1px solid #555;border-radius:12px;padding:12px 18px;transform:translate(-50%,-100%);white-space:nowrap;display:none;box-shadow:0 6px 24px #0008}
 .tip .d{font-weight:500;font-size:14px}.tip .n{color:var(--accent);font-size:28px;font-weight:500;margin-top:2px}
@@ -59,7 +59,7 @@ td:last-child{text-align:right;font-variant-numeric:tabular-nums}
 <p class="foot" id="foot"></p>
 </main>
 <script>
-const D={"history": [{"date": "2026-10-17", "time": "", "total": 2699482, "channels": {"Infi Edits": 958104, "Roblox 3D": 121835, "Living Doodle": 1464115, "Loxric": 96, "Infi's 3D": 155332}, "missing": [], "source": "api", "window": "2026-10-16 to 2026-10-17"}, {"date": "2026-10-19", "time": "", "total": 5172144, "channels": {"Infi Edits": 606580, "Roblox 3D": 799132, "Living Doodle": 3572006, "Loxric": 104, "Infi's 3D": 194322}, "missing": [], "source": "api", "window": "2026-10-18 to 2026-10-19"}, {"date": "2026-10-21", "time": "", "total": 4829950, "channels": {"Infi Edits": 217716, "Roblox 3D": 1486316, "Living Doodle": 1898550, "Loxric": 78, "Infi's 3D": 1227290}, "missing": [], "source": "api", "window": "2026-10-20 to 2026-10-21"}, {"date": "2026-10-23", "time": "", "total": 4907071, "channels": {"Infi Edits": 242751, "Roblox 3D": 1638959, "Living Doodle": 1481923, "Loxric": 66, "Infi's 3D": 1543372}, "missing": [], "source": "api", "window": "2026-10-22 to 2026-10-23"}, {"date": "2026-10-25", "time": "", "total": 3483294, "channels": {"Infi Edits": 110988, "Roblox 3D": 535615, "Living Doodle": 1698199, "Loxric": 81, "Infi's 3D": 1138411}, "missing": [], "source": "api", "window": "2026-10-24 to 2026-10-25"}, {"date": "2026-10-27", "time": "", "total": 1804021, "channels": {"Infi Edits": 61696, "Roblox 3D": 369002, "Living Doodle": 1113391, "Loxric": 65, "Infi's 3D": 259867}, "missing": [], "source": "api", "window": "2026-10-26 to 2026-10-27"}, {"date": "2026-10-29", "time": "", "total": 1817169, "channels": {"Infi Edits": 71663, "Roblox 3D": 521977, "Living Doodle": 924819, "Loxric": 1152, "Infi's 3D": 297558}, "missing": [], "source": "api", "window": "2026-10-28 to 2026-10-29"}, {"date": "2026-10-31", "time": "", "total": 2930382, "channels": {"Infi Edits": 53076, "Roblox 3D": 478333, "Living Doodle": 2119811, "Loxric": 421, "Infi's 3D": 278741}, "missing": [], "source": "api", "window": "2026-10-30 to 2026-10-31"}, {"date": "2026-11-02", "time": "", "total": 2565036, "channels": {"Infi Edits": 81033, "Roblox 3D": 370256, "Living Doodle": 1730424, "Loxric": 161, "Infi's 3D": 383162}, "missing": [], "source": "api", "window": "2026-11-01 to 2026-11-02"}, {"date": "2026-11-04", "time": "", "total": 1943275, "channels": {"Infi Edits": 108101, "Roblox 3D": 551890, "Living Doodle": 753167, "Loxric": 82, "Infi's 3D": 530035}, "missing": [], "source": "api", "window": "2026-11-03 to 2026-11-04"}, {"date": "2026-11-06", "time": "", "total": 2986075, "channels": {"Infi Edits": 566889, "Roblox 3D": 918387, "Living Doodle": 866542, "Loxric": 558, "Infi's 3D": 633699}, "missing": [], "source": "api", "window": "2026-11-05 to 2026-11-06"}, {"date": "2026-11-08", "time": "", "total": 3687786, "channels": {"Infi Edits": 347882, "Roblox 3D": 1402877, "Living Doodle": 987516, "Loxric": 6301, "Infi's 3D": 943210}, "missing": [], "source": "api", "window": "2026-11-07 to 2026-11-08"}, {"date": "2026-11-10", "time": "", "total": 3269918, "channels": {"Infi Edits": 149589, "Roblox 3D": 1150008, "Living Doodle": 1459225, "Loxric": 2359, "Infi's 3D": 508737}, "missing": [], "source": "api", "window": "2026-11-09 to 2026-11-10"}, {"date": "2026-11-12", "time": "", "total": 2288649, "channels": {"Infi Edits": 162253, "Roblox 3D": 73849, "Living Doodle": 1261663, "Loxric": 69908, "Infi's 3D": 720976}, "missing": [], "source": "api", "window": "2026-11-11 to 2026-11-12"}, {"date": "2026-11-14", "time": "", "total": 2800197, "channels": {"Infi Edits": 368724, "Roblox 3D": 92618, "Living Doodle": 1087671, "Loxric": 452438, "Infi's 3D": 798746}, "missing": [], "source": "api", "window": "2026-11-13 to 2026-11-14"}, {"date": "2026-11-17", "time": "07:48", "total": 4410617, "channels": {"Living Doodle": 1208689, "Infi Edits": 2558802, "Roblox 3D": 102850, "Loxric": 29661, "Infi's 3D": 510615}, "missing": []}], "goal": 120000000, "channels": ["Infi Edits", "Roblox 3D", "Living Doodle", "Loxric", "Infi's 3D"], "note": null, "built": "17 Nov 2026, 09:31"};
+const D={"history": [{"date": "2026-10-17", "time": "", "total": 2699482, "channels": {"Infi Edits": 958104, "Roblox 3D": 121835, "Living Doodle": 1464115, "Loxric": 96, "Infi's 3D": 155332}, "missing": [], "source": "api", "window": "2026-10-16 to 2026-10-17"}, {"date": "2026-10-19", "time": "", "total": 5172144, "channels": {"Infi Edits": 606580, "Roblox 3D": 799132, "Living Doodle": 3572006, "Loxric": 104, "Infi's 3D": 194322}, "missing": [], "source": "api", "window": "2026-10-18 to 2026-10-19"}, {"date": "2026-10-21", "time": "", "total": 4829950, "channels": {"Infi Edits": 217716, "Roblox 3D": 1486316, "Living Doodle": 1898550, "Loxric": 78, "Infi's 3D": 1227290}, "missing": [], "source": "api", "window": "2026-10-20 to 2026-10-21"}, {"date": "2026-10-23", "time": "", "total": 4907071, "channels": {"Infi Edits": 242751, "Roblox 3D": 1638959, "Living Doodle": 1481923, "Loxric": 66, "Infi's 3D": 1543372}, "missing": [], "source": "api", "window": "2026-10-22 to 2026-10-23"}, {"date": "2026-10-25", "time": "", "total": 3483294, "channels": {"Infi Edits": 110988, "Roblox 3D": 535615, "Living Doodle": 1698199, "Loxric": 81, "Infi's 3D": 1138411}, "missing": [], "source": "api", "window": "2026-10-24 to 2026-10-25"}, {"date": "2026-10-27", "time": "", "total": 1804021, "channels": {"Infi Edits": 61696, "Roblox 3D": 369002, "Living Doodle": 1113391, "Loxric": 65, "Infi's 3D": 259867}, "missing": [], "source": "api", "window": "2026-10-26 to 2026-10-27"}, {"date": "2026-10-29", "time": "", "total": 1817169, "channels": {"Infi Edits": 71663, "Roblox 3D": 521977, "Living Doodle": 924819, "Loxric": 1152, "Infi's 3D": 297558}, "missing": [], "source": "api", "window": "2026-10-28 to 2026-10-29"}, {"date": "2026-10-31", "time": "", "total": 2930382, "channels": {"Infi Edits": 53076, "Roblox 3D": 478333, "Living Doodle": 2119811, "Loxric": 421, "Infi's 3D": 278741}, "missing": [], "source": "api", "window": "2026-10-30 to 2026-10-31"}, {"date": "2026-11-02", "time": "", "total": 2565036, "channels": {"Infi Edits": 81033, "Roblox 3D": 370256, "Living Doodle": 1730424, "Loxric": 161, "Infi's 3D": 383162}, "missing": [], "source": "api", "window": "2026-11-01 to 2026-11-02"}, {"date": "2026-11-04", "time": "", "total": 1943275, "channels": {"Infi Edits": 108101, "Roblox 3D": 551890, "Living Doodle": 753167, "Loxric": 82, "Infi's 3D": 530035}, "missing": [], "source": "api", "window": "2026-11-03 to 2026-11-04"}, {"date": "2026-11-06", "time": "", "total": 2986075, "channels": {"Infi Edits": 566889, "Roblox 3D": 918387, "Living Doodle": 866542, "Loxric": 558, "Infi's 3D": 633699}, "missing": [], "source": "api", "window": "2026-11-05 to 2026-11-06"}, {"date": "2026-11-08", "time": "", "total": 3687786, "channels": {"Infi Edits": 347882, "Roblox 3D": 1402877, "Living Doodle": 987516, "Loxric": 6301, "Infi's 3D": 943210}, "missing": [], "source": "api", "window": "2026-11-07 to 2026-11-08"}, {"date": "2026-11-10", "time": "", "total": 3269918, "channels": {"Infi Edits": 149589, "Roblox 3D": 1150008, "Living Doodle": 1459225, "Loxric": 2359, "Infi's 3D": 508737}, "missing": [], "source": "api", "window": "2026-11-09 to 2026-11-10"}, {"date": "2026-11-12", "time": "", "total": 2288649, "channels": {"Infi Edits": 162253, "Roblox 3D": 73849, "Living Doodle": 1261663, "Loxric": 69908, "Infi's 3D": 720976}, "missing": [], "source": "api", "window": "2026-11-11 to 2026-11-12"}, {"date": "2026-11-14", "time": "", "total": 2800197, "channels": {"Infi Edits": 368724, "Roblox 3D": 92618, "Living Doodle": 1087671, "Loxric": 452438, "Infi's 3D": 798746}, "missing": [], "source": "api", "window": "2026-11-13 to 2026-11-14"}, {"date": "2026-11-17", "time": "07:48", "total": 4410617, "channels": {"Living Doodle": 1208689, "Infi Edits": 2558802, "Roblox 3D": 102850, "Loxric": 29661, "Infi's 3D": 510615}, "missing": []}], "goal": 120000000, "channels": ["Infi Edits", "Roblox 3D", "Living Doodle", "Loxric", "Infi's 3D"], "note": null, "built": "17 Nov 2026, 09:33"};
 const H=D.history, N=H.length;
 const fmt=n=>n>=1e6?(n/1e6).toFixed(n>=1e8?0:n>=1e7?1:2).replace(/\.0+$/,'')+'m':n>=1e3?Math.round(n/1e3)+'k':String(n);
 const full=n=>n.toLocaleString('en-US');
@@ -87,15 +87,17 @@ document.getElementById('lvlNow').style.height=Math.max(1.5,Math.min(100,last.to
 document.getElementById('now').textContent=fmt(last.total);
 document.getElementById('pct').textContent=`${(last.total/D.goal*100).toFixed(1)}% of goal`;
 // chart
-const W=1100,Ht=330,L=10,R=80,T=10,B=70,mx=Math.max(...H.map(h=>h.total));
+let W,Ht,x,y,base,svg,guide,dot;const tip=document.getElementById('tip');let pinned=N-1;
+function draw(){
+W=Math.max(300,document.getElementById('cw').clientWidth-24);Ht=W<600?250:330;const L=10,R=56,T=10,B=64,mx=Math.max(...H.map(h=>h.total));
 const raw=mx/3,mag=10**Math.floor(Math.log10(raw)),step=[1,1.5,2,2.5,5,10].map(k=>k*mag).find(s=>s>=raw),top=step*Math.ceil(mx*1.05/step);
-const x=i=>N<2?L+(W-L-R)/2:L+i*(W-L-R)/(N-1), y=v=>T+(Ht-T-B)*(1-v/top), base=y(0);
+x=i=>N<2?L+(W-L-R)/2:L+i*(W-L-R)/(N-1); y=v=>T+(Ht-T-B)*(1-v/top); base=y(0);
 let s=`<svg viewBox="0 0 ${W} ${Ht}" id="svg"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3ea6ff" stop-opacity=".22"/><stop offset="1" stop-color="#3ea6ff" stop-opacity=".03"/></linearGradient></defs>`;
 for(let v=0;v<=top+1;v+=step) s+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="${v?'var(--grid)':'#777'}" stroke-width="${v?1:1.5}"/><text class="tick" x="${W-R+16}" y="${y(v)+5}">${fmt(v)}</text>`;
 const pts=H.map((h,i)=>[x(i),y(h.total)]);
 s+=`<path d="M${pts[0][0]},${base} L${pts.map(p=>p.join(',')).join(' L')} L${pts[N-1][0]},${base}Z" fill="url(#g)"/>`;
 s+=`<polyline points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linejoin="round"/>`;
-const ty=Ht-B+22, every=Math.max(1,Math.ceil(N/7));
+const ty=Ht-B+22, every=Math.max(1,Math.ceil(N/(W<600?3:7)));
 s+=`<line x1="${L}" x2="${W-R}" y1="${ty-6}" y2="${ty-6}" stroke="#555"/>`;
 H.forEach((h,i)=>{
   s+=`<circle cx="${pts[i][0]}" cy="${pts[i][1]}" r="4" fill="var(--accent)" opacity="${h.source==='api'?.55:1}"/>`;
@@ -105,8 +107,7 @@ s+=`<line id="guide" x1="0" x2="0" y1="${T}" y2="${base}" stroke="#888" visibili
 const band=(W-L-R)/Math.max(1,N-1);
 H.forEach((h,i)=>{s+=`<rect class="hit" data-i="${i}" x="${x(i)-band/2}" y="${T}" width="${band}" height="${base-T}" fill="transparent"/>`;});
 document.getElementById('chart').innerHTML=s+'</svg>';
-const svg=document.getElementById('svg'),tip=document.getElementById('tip'),guide=document.getElementById('guide'),dot=document.getElementById('dot');
-let pinned=N-1;
+svg=document.getElementById('svg');guide=document.getElementById('guide');dot=document.getElementById('dot');
 function show(i){
   const h=H[i],r=svg.getBoundingClientRect(),k=r.width/W,cw=document.getElementById('cw').getBoundingClientRect();
   guide.setAttribute('x1',x(i));guide.setAttribute('x2',x(i));guide.setAttribute('visibility','visible');
@@ -114,7 +115,9 @@ function show(i){
   tip.innerHTML=`<div class="d">${wlab(h)}</div><div class="n">${full(h.total)}</div><div class="s">${h.source==='api'?'YouTube Analytics':'Studio realtime'}</div>`;
   tip.style.display='block';
   let px=r.left-cw.left+x(i)*k; const half=tip.offsetWidth/2; px=Math.min(Math.max(px,half+4),cw.width-half-4);
-  tip.style.left=px+'px';tip.style.top=(r.top-cw.top+y(h.total)*k-16)+'px';
+  const py=r.top-cw.top+y(h.total)*k, below=py-tip.offsetHeight-16<0;
+  tip.style.left=px+'px';tip.style.top=(below?py+16:py-16)+'px';
+  tip.style.transform=below?'translate(-50%,0)':'translate(-50%,-100%)';
 }
 function detail(i){
   const h=H[i],p=H[i-1];
@@ -132,7 +135,9 @@ svg.querySelectorAll('.hit').forEach(el=>{
   el.addEventListener('click',()=>{pinned=i;show(i);detail(i);});
 });
 svg.addEventListener('mouseleave',()=>{show(pinned);detail(pinned);});
-window.addEventListener('resize',()=>show(pinned));
 show(pinned);detail(pinned);
+}
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(draw,150);});
+draw();
 }
 </script></body></html>
