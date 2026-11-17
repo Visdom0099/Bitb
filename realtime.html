@@ -1,76 +1,138 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Realtime Tracker</title><meta name="robots" content="noindex,nofollow">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f6f6f3;--card:#fff;--ink:#1b1b1b;--muted:#6b6b66;--line:#1b1b1b;--grid:#e6e6e1;--fill:#a6e35a;--fill-ink:#2f5a00;--warn:#b54a1c}
-@media (prefers-color-scheme:dark){:root{--bg:#141413;--card:#1e1e1c;--ink:#ededea;--muted:#9a9a94;--line:#ededea;--grid:#2e2e2b;--fill:#8fd14a;--fill-ink:#c9f59a;--warn:#f08a5d}}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
-main{max-width:1100px;margin:0 auto;padding:28px 16px 40px}
-h1{font-size:22px;margin:0 0 2px}.sub{color:var(--muted);font-size:13px;margin:0 0 20px}
-.wrap{display:grid;grid-template-columns:1fr 230px;gap:16px}
-@media (max-width:760px){.wrap{grid-template-columns:1fr}}
-.card{background:var(--card);border-radius:14px;padding:18px}
-.card h2{font-size:13px;font-weight:600;color:var(--muted);margin:0 0 10px;text-transform:uppercase;letter-spacing:.04em}
-svg{display:block;width:100%;height:auto}
-.bars{display:flex;justify-content:space-around;align-items:flex-end;gap:14px;height:300px}
+:root{--bg:#0f0f0f;--panel:#181818;--tab:#282828;--border:#3a3a3a;--ink:#f1f1f1;--muted:#aaaaaa;--grid:#3a3a3a;--accent:#3ea6ff;--up:#2ba640;--down:#ff4e45;--fill:#8fd14a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 Roboto,system-ui,"Segoe UI",sans-serif}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 48px}
+h1{font-size:clamp(22px,3.4vw,38px);font-weight:700;text-align:center;margin:8px 0 26px;letter-spacing:-.01em}
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr)}
+.tabs>div{padding:20px 12px 22px;text-align:center;background:var(--tab);border-left:1px solid var(--border)}
+.tabs>div:first-child{background:var(--panel);border-left:0}
+.tabs .lab{color:var(--muted);font-size:15px}.tabs .val{font-size:clamp(24px,3.2vw,40px);font-weight:700;margin:6px 0 4px;display:flex;justify-content:center;align-items:center;gap:10px}
+.tabs .sub{color:var(--muted);font-style:italic;font-size:14px}
+.badge{width:28px;height:28px;border-radius:50%;display:inline-grid;place-items:center;font-size:16px;color:#fff}
+@media (max-width:760px){.tabs{grid-template-columns:1fr 1fr}.tabs>div:nth-child(3){border-left:0}.tabs>div{border-top:1px solid var(--border)}}
+.chartwrap{position:relative;padding:28px 8px 8px 16px}
+svg{display:block;width:100%;height:auto;overflow:visible}
+.tick{fill:var(--muted);font-size:14px}
+.hit{cursor:pointer}
+.tip{position:absolute;pointer-events:none;background:#1b1b1b;border:1px solid #555;border-radius:12px;padding:12px 18px;transform:translate(-50%,-100%);white-space:nowrap;display:none;box-shadow:0 6px 24px #0008}
+.tip .d{font-weight:500;font-size:14px}.tip .n{color:var(--accent);font-size:28px;font-weight:500;margin-top:2px}
+.tip .s{color:var(--muted);font-size:12px;margin-top:2px}
+.hint{color:var(--muted);font-size:13px;text-align:center;padding:4px 0 16px}
+.row{display:grid;grid-template-columns:260px 1fr;gap:16px;margin-top:16px}
+@media (max-width:760px){.row{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:18px 20px}
+.card h2{font-size:13px;font-weight:500;color:var(--muted);margin:0 0 12px;text-transform:uppercase;letter-spacing:.05em}
+.bars{display:flex;justify-content:space-around;align-items:flex-end;height:280px}
 .bar{display:flex;flex-direction:column;align-items:center;gap:8px;height:100%}
-.tube{position:relative;width:46px;flex:1;border:2.5px solid var(--line);border-radius:10px;overflow:hidden}
+.tube{position:relative;width:46px;flex:1;border:2.5px solid #ddd;border-radius:10px;overflow:hidden}
 .tube .lvl{position:absolute;left:0;right:0;bottom:0;background:var(--fill)}
-.bar b{font-size:16px}.bar span{font-size:12px;color:var(--muted);text-align:center}
-.pct{text-align:center;margin-top:12px;font-size:13px;color:var(--muted)}
-table{width:100%;border-collapse:collapse;font-size:14px;margin-top:6px}td{padding:6px 0;border-bottom:1px solid var(--grid)}
-td:last-child{text-align:right;font-variant-numeric:tabular-nums}.up{color:var(--fill-ink)}.down{color:var(--warn)}
-.note{background:var(--card);border-left:4px solid var(--warn);padding:10px 14px;border-radius:8px;margin-bottom:16px;font-size:14px}
-.empty{color:var(--muted);padding:60px 0;text-align:center}
-.tip{font-size:12px;fill:var(--muted)}
+.bar b{font-size:17px}.bar span{font-size:12px;color:var(--muted)}
+.pct{text-align:center;margin-top:12px;color:var(--muted);font-size:13px}
+table{width:100%;border-collapse:collapse;font-size:15px}td{padding:9px 0;border-bottom:1px solid var(--border)}
+td:last-child{text-align:right;font-variant-numeric:tabular-nums}
+.share{display:inline-block;height:6px;border-radius:3px;background:var(--accent);margin-right:8px;vertical-align:middle;opacity:.7}
+.up{color:var(--up)}.down{color:var(--down)}
+.note{border:1px solid var(--down);color:#ffb3ae;padding:10px 14px;border-radius:10px;margin-bottom:16px;font-size:14px}
+.foot{color:var(--muted);font-size:12px;text-align:center;margin-top:18px}
 </style></head><body><main>
-<h1>Realtime tracker</h1>
-<p class="sub" id="sub"></p>
 <div id="note"></div>
-<div class="wrap">
-  <div class="card"><h2>48-hour views, all channels</h2><div id="chart"></div></div>
+<h1 id="head">Realtime tracker</h1>
+<div class="panel">
+  <div class="tabs" id="tabs"></div>
+  <div class="chartwrap" id="cw"><div id="chart"></div><div class="tip" id="tip"></div></div>
+  <div class="hint">Hover or click a point to see that reading and each channel's share.</div>
+</div>
+<div class="row">
   <div class="card"><h2>Today vs goal</h2>
     <div class="bars">
       <div class="bar"><div class="tube"><div class="lvl" id="lvlNow"></div></div><b id="now">-</b><span>today's realtime</span></div>
       <div class="bar"><div class="tube"><div class="lvl" style="height:100%"></div></div><b id="goal">-</b><span>goal realtime</span></div>
-    </div>
-    <div class="pct" id="pct"></div>
+    </div><div class="pct" id="pct"></div>
   </div>
+  <div class="card"><h2 id="selTitle">Selected reading</h2><table id="tbl"></table></div>
 </div>
-<div class="card" style="margin-top:16px"><h2>Latest reading by channel</h2><table id="tbl"></table></div>
+<p class="foot" id="foot"></p>
 </main>
 <script>
-const D={"history": [{"date": "2026-10-17", "time": "", "total": 2699482, "channels": {"Infi Edits": 958104, "Roblox 3D": 121835, "Living Doodle": 1464115, "Loxric": 96, "Infi's 3D": 155332}, "missing": [], "source": "api", "window": "2026-10-16 to 2026-10-17"}, {"date": "2026-10-19", "time": "", "total": 5172144, "channels": {"Infi Edits": 606580, "Roblox 3D": 799132, "Living Doodle": 3572006, "Loxric": 104, "Infi's 3D": 194322}, "missing": [], "source": "api", "window": "2026-10-18 to 2026-10-19"}, {"date": "2026-10-21", "time": "", "total": 4829950, "channels": {"Infi Edits": 217716, "Roblox 3D": 1486316, "Living Doodle": 1898550, "Loxric": 78, "Infi's 3D": 1227290}, "missing": [], "source": "api", "window": "2026-10-20 to 2026-10-21"}, {"date": "2026-10-23", "time": "", "total": 4907071, "channels": {"Infi Edits": 242751, "Roblox 3D": 1638959, "Living Doodle": 1481923, "Loxric": 66, "Infi's 3D": 1543372}, "missing": [], "source": "api", "window": "2026-10-22 to 2026-10-23"}, {"date": "2026-10-25", "time": "", "total": 3483294, "channels": {"Infi Edits": 110988, "Roblox 3D": 535615, "Living Doodle": 1698199, "Loxric": 81, "Infi's 3D": 1138411}, "missing": [], "source": "api", "window": "2026-10-24 to 2026-10-25"}, {"date": "2026-10-27", "time": "", "total": 1804021, "channels": {"Infi Edits": 61696, "Roblox 3D": 369002, "Living Doodle": 1113391, "Loxric": 65, "Infi's 3D": 259867}, "missing": [], "source": "api", "window": "2026-10-26 to 2026-10-27"}, {"date": "2026-10-29", "time": "", "total": 1817169, "channels": {"Infi Edits": 71663, "Roblox 3D": 521977, "Living Doodle": 924819, "Loxric": 1152, "Infi's 3D": 297558}, "missing": [], "source": "api", "window": "2026-10-28 to 2026-10-29"}, {"date": "2026-10-31", "time": "", "total": 2930382, "channels": {"Infi Edits": 53076, "Roblox 3D": 478333, "Living Doodle": 2119811, "Loxric": 421, "Infi's 3D": 278741}, "missing": [], "source": "api", "window": "2026-10-30 to 2026-10-31"}, {"date": "2026-11-02", "time": "", "total": 2565036, "channels": {"Infi Edits": 81033, "Roblox 3D": 370256, "Living Doodle": 1730424, "Loxric": 161, "Infi's 3D": 383162}, "missing": [], "source": "api", "window": "2026-11-01 to 2026-11-02"}, {"date": "2026-11-04", "time": "", "total": 1943275, "channels": {"Infi Edits": 108101, "Roblox 3D": 551890, "Living Doodle": 753167, "Loxric": 82, "Infi's 3D": 530035}, "missing": [], "source": "api", "window": "2026-11-03 to 2026-11-04"}, {"date": "2026-11-06", "time": "", "total": 2986075, "channels": {"Infi Edits": 566889, "Roblox 3D": 918387, "Living Doodle": 866542, "Loxric": 558, "Infi's 3D": 633699}, "missing": [], "source": "api", "window": "2026-11-05 to 2026-11-06"}, {"date": "2026-11-08", "time": "", "total": 3687786, "channels": {"Infi Edits": 347882, "Roblox 3D": 1402877, "Living Doodle": 987516, "Loxric": 6301, "Infi's 3D": 943210}, "missing": [], "source": "api", "window": "2026-11-07 to 2026-11-08"}, {"date": "2026-11-10", "time": "", "total": 3269918, "channels": {"Infi Edits": 149589, "Roblox 3D": 1150008, "Living Doodle": 1459225, "Loxric": 2359, "Infi's 3D": 508737}, "missing": [], "source": "api", "window": "2026-11-09 to 2026-11-10"}, {"date": "2026-11-12", "time": "", "total": 2288649, "channels": {"Infi Edits": 162253, "Roblox 3D": 73849, "Living Doodle": 1261663, "Loxric": 69908, "Infi's 3D": 720976}, "missing": [], "source": "api", "window": "2026-11-11 to 2026-11-12"}, {"date": "2026-11-14", "time": "", "total": 2800197, "channels": {"Infi Edits": 368724, "Roblox 3D": 92618, "Living Doodle": 1087671, "Loxric": 452438, "Infi's 3D": 798746}, "missing": [], "source": "api", "window": "2026-11-13 to 2026-11-14"}, {"date": "2026-11-17", "time": "07:48", "total": 4410617, "channels": {"Living Doodle": 1208689, "Infi Edits": 2558802, "Roblox 3D": 102850, "Loxric": 29661, "Infi's 3D": 510615}, "missing": []}], "goal": 120000000, "channels": ["Infi Edits", "Roblox 3D", "Living Doodle", "Loxric", "Infi's 3D"], "note": null, "built": "17 Nov 2026, 07:55"};
-const fmt=n=>n>=1e6?(n/1e6).toFixed(n>=1e7?1:2)+'M':n>=1e3?Math.round(n/1e3)+'K':String(n);
-const H=D.history, last=H[H.length-1], prev=H[H.length-2];
-document.getElementById('sub').textContent=`Studio's 48-hour views summed across ${D.channels.length} channels, every 2 days. Points before ${(H.find(h=>h.source!=='api')||{date:'today'}).date} are 2-day views from YouTube Analytics. Page built ${D.built}.`;
+const D={"history": [{"date": "2026-10-17", "time": "", "total": 2699482, "channels": {"Infi Edits": 958104, "Roblox 3D": 121835, "Living Doodle": 1464115, "Loxric": 96, "Infi's 3D": 155332}, "missing": [], "source": "api", "window": "2026-10-16 to 2026-10-17"}, {"date": "2026-10-19", "time": "", "total": 5172144, "channels": {"Infi Edits": 606580, "Roblox 3D": 799132, "Living Doodle": 3572006, "Loxric": 104, "Infi's 3D": 194322}, "missing": [], "source": "api", "window": "2026-10-18 to 2026-10-19"}, {"date": "2026-10-21", "time": "", "total": 4829950, "channels": {"Infi Edits": 217716, "Roblox 3D": 1486316, "Living Doodle": 1898550, "Loxric": 78, "Infi's 3D": 1227290}, "missing": [], "source": "api", "window": "2026-10-20 to 2026-10-21"}, {"date": "2026-10-23", "time": "", "total": 4907071, "channels": {"Infi Edits": 242751, "Roblox 3D": 1638959, "Living Doodle": 1481923, "Loxric": 66, "Infi's 3D": 1543372}, "missing": [], "source": "api", "window": "2026-10-22 to 2026-10-23"}, {"date": "2026-10-25", "time": "", "total": 3483294, "channels": {"Infi Edits": 110988, "Roblox 3D": 535615, "Living Doodle": 1698199, "Loxric": 81, "Infi's 3D": 1138411}, "missing": [], "source": "api", "window": "2026-10-24 to 2026-10-25"}, {"date": "2026-10-27", "time": "", "total": 1804021, "channels": {"Infi Edits": 61696, "Roblox 3D": 369002, "Living Doodle": 1113391, "Loxric": 65, "Infi's 3D": 259867}, "missing": [], "source": "api", "window": "2026-10-26 to 2026-10-27"}, {"date": "2026-10-29", "time": "", "total": 1817169, "channels": {"Infi Edits": 71663, "Roblox 3D": 521977, "Living Doodle": 924819, "Loxric": 1152, "Infi's 3D": 297558}, "missing": [], "source": "api", "window": "2026-10-28 to 2026-10-29"}, {"date": "2026-10-31", "time": "", "total": 2930382, "channels": {"Infi Edits": 53076, "Roblox 3D": 478333, "Living Doodle": 2119811, "Loxric": 421, "Infi's 3D": 278741}, "missing": [], "source": "api", "window": "2026-10-30 to 2026-10-31"}, {"date": "2026-11-02", "time": "", "total": 2565036, "channels": {"Infi Edits": 81033, "Roblox 3D": 370256, "Living Doodle": 1730424, "Loxric": 161, "Infi's 3D": 383162}, "missing": [], "source": "api", "window": "2026-11-01 to 2026-11-02"}, {"date": "2026-11-04", "time": "", "total": 1943275, "channels": {"Infi Edits": 108101, "Roblox 3D": 551890, "Living Doodle": 753167, "Loxric": 82, "Infi's 3D": 530035}, "missing": [], "source": "api", "window": "2026-11-03 to 2026-11-04"}, {"date": "2026-11-06", "time": "", "total": 2986075, "channels": {"Infi Edits": 566889, "Roblox 3D": 918387, "Living Doodle": 866542, "Loxric": 558, "Infi's 3D": 633699}, "missing": [], "source": "api", "window": "2026-11-05 to 2026-11-06"}, {"date": "2026-11-08", "time": "", "total": 3687786, "channels": {"Infi Edits": 347882, "Roblox 3D": 1402877, "Living Doodle": 987516, "Loxric": 6301, "Infi's 3D": 943210}, "missing": [], "source": "api", "window": "2026-11-07 to 2026-11-08"}, {"date": "2026-11-10", "time": "", "total": 3269918, "channels": {"Infi Edits": 149589, "Roblox 3D": 1150008, "Living Doodle": 1459225, "Loxric": 2359, "Infi's 3D": 508737}, "missing": [], "source": "api", "window": "2026-11-09 to 2026-11-10"}, {"date": "2026-11-12", "time": "", "total": 2288649, "channels": {"Infi Edits": 162253, "Roblox 3D": 73849, "Living Doodle": 1261663, "Loxric": 69908, "Infi's 3D": 720976}, "missing": [], "source": "api", "window": "2026-11-11 to 2026-11-12"}, {"date": "2026-11-14", "time": "", "total": 2800197, "channels": {"Infi Edits": 368724, "Roblox 3D": 92618, "Living Doodle": 1087671, "Loxric": 452438, "Infi's 3D": 798746}, "missing": [], "source": "api", "window": "2026-11-13 to 2026-11-14"}, {"date": "2026-11-17", "time": "07:48", "total": 4410617, "channels": {"Living Doodle": 1208689, "Infi Edits": 2558802, "Roblox 3D": 102850, "Loxric": 29661, "Infi's 3D": 510615}, "missing": []}], "goal": 120000000, "channels": ["Infi Edits", "Roblox 3D", "Living Doodle", "Loxric", "Infi's 3D"], "note": null, "built": "17 Nov 2026, 09:31"};
+const H=D.history, N=H.length;
+const fmt=n=>n>=1e6?(n/1e6).toFixed(n>=1e8?0:n>=1e7?1:2).replace(/\.0+$/,'')+'m':n>=1e3?Math.round(n/1e3)+'k':String(n);
+const full=n=>n.toLocaleString('en-US');
+const dlab=(s,o)=>new Date(s+'T00:00').toLocaleDateString('en-GB',o||{day:'numeric',month:'short',year:'numeric'});
+const wlab=h=>h.window?`${dlab(h.window.slice(0,10),{weekday:'short',day:'numeric',month:'short'})} – ${dlab(h.date,{weekday:'short',day:'numeric',month:'short',year:'numeric'})}`:`48 hours to ${dlab(h.date,{weekday:'short',day:'numeric',month:'short',year:'numeric'})}${h.time?', '+h.time:''}`;
 if(D.note) document.getElementById('note').innerHTML=`<div class="note">Last update failed: ${D.note} Showing the previous reading.</div>`;
+document.getElementById('foot').textContent=`Total 48-hour views across ${D.channels.length} channels (${D.channels.join(', ')}). Updated every 2 days; points before the first Studio reading come from YouTube Analytics. Page built ${D.built}.`;
 document.getElementById('goal').textContent=fmt(D.goal);
-if(!last){document.getElementById('chart').innerHTML='<div class="empty">No readings yet.</div>';}
+if(!N){document.getElementById('chart').innerHTML='<p class="hint">No readings yet.</p>';}
 else{
-  const p=Math.min(100,last.total/D.goal*100);
-  document.getElementById('lvlNow').style.height=p+'%';
-  document.getElementById('now').textContent=fmt(last.total);
-  let ch=prev?` · ${last.total>=prev.total?'▲':'▼'} ${fmt(Math.abs(last.total-prev.total))} vs last reading`:'';
-  document.getElementById('pct').textContent=`${(last.total/D.goal*100).toFixed(0)}% of goal${ch}`;
-  // line chart
-  const W=760,Ht=360,L=56,R=16,T=16,B=40, max=Math.max(...H.map(h=>h.total))*1.15;
-  const x=i=>H.length<2?L+(W-L-R)/2:L+i*(W-L-R)/(H.length-1), y=v=>T+(Ht-T-B)*(1-v/max);
-  let s=`<svg viewBox="0 0 ${W} ${Ht}" role="img" aria-label="48-hour views over time">`;
-  for(let k=0;k<=4;k++){const v=max*k/4;s+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--grid)"/><text class="tip" x="${L-8}" y="${y(v)+4}" text-anchor="end">${fmt(v)}</text>`;}
-  if(D.goal<=max) s+=`<line x1="${L}" x2="${W-R}" y1="${y(D.goal)}" y2="${y(D.goal)}" stroke="var(--fill)" stroke-width="2" stroke-dasharray="6 5"/><text class="tip" x="${W-R}" y="${y(D.goal)-6}" text-anchor="end">goal</text>`;
-  s+=`<line x1="${L}" x2="${L}" y1="${T}" y2="${Ht-B}" stroke="var(--line)" stroke-width="2"/><line x1="${L}" x2="${W-R}" y1="${Ht-B}" y2="${Ht-B}" stroke="var(--line)" stroke-width="2"/>`;
-  s+=`<polyline fill="none" stroke="var(--line)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" points="${H.map((h,i)=>x(i)+','+y(h.total)).join(' ')}"/>`;
-  const every=Math.ceil(H.length/8);
-  H.forEach((h,i)=>{const d=new Date(h.date+'T00:00');
-    s+=`<circle cx="${x(i)}" cy="${y(h.total)}" r="4.5" fill="var(--card)" stroke="var(--line)" stroke-width="2.5"><title>${h.window||h.date}: ${h.total.toLocaleString('en-IN')} views${h.source==='api'?' (from Analytics)':' (Studio realtime)'}</title></circle>`;
-    if(i%every===0||i===H.length-1) s+=`<text class="tip" x="${x(i)}" y="${Ht-B+20}" text-anchor="middle">${d.toLocaleDateString('en-GB',{day:'numeric',month:'short'})}</text>`;});
-  document.getElementById('chart').innerHTML=s+'</svg>';
-  // table
-  const rows=Object.entries(last.channels).sort((a,b)=>b[1]-a[1]).map(([n,v])=>{
-    let d='';if(prev&&prev.channels[n]!=null){const c=v-prev.channels[n];d=` <span class="${c>=0?'up':'down'}">${c>=0?'▲':'▼'} ${fmt(Math.abs(c))}</span>`;}
-    return `<tr><td>${n}</td><td>${fmt(v)}${d}</td></tr>`;});
-  (last.missing||[]).forEach(n=>rows.push(`<tr><td>${n}</td><td style="color:var(--muted)">not read</td></tr>`));
-  document.getElementById('tbl').innerHTML=rows.join('')+`<tr><td><b>Total</b> <span style="color:var(--muted);font-size:12px">${last.date} ${last.time}</span></td><td><b>${fmt(last.total)}</b></td></tr>`;
+const last=H[N-1], prev=H[N-2];
+document.getElementById('head').textContent=`Your channels got ${full(last.total)} views in the last 48 hours`;
+// stat tabs
+const best=H.reduce((a,b)=>b.total>a.total?b:a), avg=H.reduce((s,h)=>s+h.total,0)/N;
+const diff=prev?last.total-prev.total:0, pctPrev=prev?Math.abs(diff)/prev.total*100:0;
+const badge=up=>`<span class="badge" style="background:${up?'var(--up)':'#666'}">${up?'↑':'↓'}</span>`;
+document.getElementById('tabs').innerHTML=[
+ ['48-hour views',fmt(last.total)+(prev?badge(diff>=0):''),prev?`${pctPrev.toFixed(0)}% ${diff>=0?'more':'less'} than last reading`:'first reading'],
+ ['Goal',fmt(D.goal),`${(last.total/D.goal*100).toFixed(1)}% reached`],
+ ['Best reading',fmt(best.total),dlab(best.date)],
+ ['Average',fmt(Math.round(avg)),`over ${N} readings`]
+].map(([l,v,s])=>`<div><div class="lab">${l}</div><div class="val">${v}</div><div class="sub">${s}</div></div>`).join('');
+// goal tubes
+document.getElementById('lvlNow').style.height=Math.max(1.5,Math.min(100,last.total/D.goal*100))+'%';
+document.getElementById('now').textContent=fmt(last.total);
+document.getElementById('pct').textContent=`${(last.total/D.goal*100).toFixed(1)}% of goal`;
+// chart
+const W=1100,Ht=330,L=10,R=80,T=10,B=70,mx=Math.max(...H.map(h=>h.total));
+const raw=mx/3,mag=10**Math.floor(Math.log10(raw)),step=[1,1.5,2,2.5,5,10].map(k=>k*mag).find(s=>s>=raw),top=step*Math.ceil(mx*1.05/step);
+const x=i=>N<2?L+(W-L-R)/2:L+i*(W-L-R)/(N-1), y=v=>T+(Ht-T-B)*(1-v/top), base=y(0);
+let s=`<svg viewBox="0 0 ${W} ${Ht}" id="svg"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3ea6ff" stop-opacity=".22"/><stop offset="1" stop-color="#3ea6ff" stop-opacity=".03"/></linearGradient></defs>`;
+for(let v=0;v<=top+1;v+=step) s+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="${v?'var(--grid)':'#777'}" stroke-width="${v?1:1.5}"/><text class="tick" x="${W-R+16}" y="${y(v)+5}">${fmt(v)}</text>`;
+const pts=H.map((h,i)=>[x(i),y(h.total)]);
+s+=`<path d="M${pts[0][0]},${base} L${pts.map(p=>p.join(',')).join(' L')} L${pts[N-1][0]},${base}Z" fill="url(#g)"/>`;
+s+=`<polyline points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linejoin="round"/>`;
+const ty=Ht-B+22, every=Math.max(1,Math.ceil(N/7));
+s+=`<line x1="${L}" x2="${W-R}" y1="${ty-6}" y2="${ty-6}" stroke="#555"/>`;
+H.forEach((h,i)=>{
+  s+=`<circle cx="${pts[i][0]}" cy="${pts[i][1]}" r="4" fill="var(--accent)" opacity="${h.source==='api'?.55:1}"/>`;
+  if(i%every===0||i===N-1){s+=`<line x1="${x(i)}" x2="${x(i)}" y1="${ty-6}" y2="${ty+2}" stroke="#555"/><text class="tick" x="${x(i)}" y="${ty+26}" text-anchor="${i===0?'start':i===N-1?'end':'middle'}">${dlab(h.date)}</text>`;}
+});
+s+=`<line id="guide" x1="0" x2="0" y1="${T}" y2="${base}" stroke="#888" visibility="hidden"/><circle id="dot" r="8" fill="var(--accent)" stroke="#0f0f0f" stroke-width="3" visibility="hidden"/>`;
+const band=(W-L-R)/Math.max(1,N-1);
+H.forEach((h,i)=>{s+=`<rect class="hit" data-i="${i}" x="${x(i)-band/2}" y="${T}" width="${band}" height="${base-T}" fill="transparent"/>`;});
+document.getElementById('chart').innerHTML=s+'</svg>';
+const svg=document.getElementById('svg'),tip=document.getElementById('tip'),guide=document.getElementById('guide'),dot=document.getElementById('dot');
+let pinned=N-1;
+function show(i){
+  const h=H[i],r=svg.getBoundingClientRect(),k=r.width/W,cw=document.getElementById('cw').getBoundingClientRect();
+  guide.setAttribute('x1',x(i));guide.setAttribute('x2',x(i));guide.setAttribute('visibility','visible');
+  dot.setAttribute('cx',x(i));dot.setAttribute('cy',y(h.total));dot.setAttribute('visibility','visible');
+  tip.innerHTML=`<div class="d">${wlab(h)}</div><div class="n">${full(h.total)}</div><div class="s">${h.source==='api'?'YouTube Analytics':'Studio realtime'}</div>`;
+  tip.style.display='block';
+  let px=r.left-cw.left+x(i)*k; const half=tip.offsetWidth/2; px=Math.min(Math.max(px,half+4),cw.width-half-4);
+  tip.style.left=px+'px';tip.style.top=(r.top-cw.top+y(h.total)*k-16)+'px';
+}
+function detail(i){
+  const h=H[i],p=H[i-1];
+  document.getElementById('selTitle').textContent=`${i===N-1?'Latest reading':'Selected reading'} · ${wlab(h)}`;
+  const rows=Object.entries(h.channels).sort((a,b)=>b[1]-a[1]).map(([n,v])=>{
+    let d='';if(p&&p.channels[n]!=null){const c=v-p.channels[n];d=` <span class="${c>=0?'up':'down'}">${c>=0?'▲':'▼'} ${fmt(Math.abs(c))}</span>`;}
+    const w=h.total?Math.max(2,v/h.total*140):0;
+    return `<tr><td><span class="share" style="width:${w}px"></span>${n}</td><td>${fmt(v)}${d}</td></tr>`;});
+  (h.missing||[]).forEach(n=>rows.push(`<tr><td>${n}</td><td style="color:var(--muted)">not read</td></tr>`));
+  document.getElementById('tbl').innerHTML=rows.join('')+`<tr><td><b>Total</b></td><td><b>${full(h.total)}</b></td></tr>`;
+}
+svg.querySelectorAll('.hit').forEach(el=>{
+  const i=+el.dataset.i;
+  el.addEventListener('mouseenter',()=>{show(i);detail(i);});
+  el.addEventListener('click',()=>{pinned=i;show(i);detail(i);});
+});
+svg.addEventListener('mouseleave',()=>{show(pinned);detail(pinned);});
+window.addEventListener('resize',()=>show(pinned));
+show(pinned);detail(pinned);
 }
 </script></body></html>
