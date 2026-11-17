@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Realtime Tracker</title><meta name="robots" content="noindex,nofollow">
+<style>
+:root{--bg:#f6f6f3;--card:#fff;--ink:#1b1b1b;--muted:#6b6b66;--line:#1b1b1b;--grid:#e6e6e1;--fill:#a6e35a;--fill-ink:#2f5a00;--warn:#b54a1c}
+@media (prefers-color-scheme:dark){:root{--bg:#141413;--card:#1e1e1c;--ink:#ededea;--muted:#9a9a94;--line:#ededea;--grid:#2e2e2b;--fill:#8fd14a;--fill-ink:#c9f59a;--warn:#f08a5d}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:1100px;margin:0 auto;padding:28px 16px 40px}
+h1{font-size:22px;margin:0 0 2px}.sub{color:var(--muted);font-size:13px;margin:0 0 20px}
+.wrap{display:grid;grid-template-columns:1fr 230px;gap:16px}
+@media (max-width:760px){.wrap{grid-template-columns:1fr}}
+.card{background:var(--card);border-radius:14px;padding:18px}
+.card h2{font-size:13px;font-weight:600;color:var(--muted);margin:0 0 10px;text-transform:uppercase;letter-spacing:.04em}
+svg{display:block;width:100%;height:auto}
+.bars{display:flex;justify-content:space-around;align-items:flex-end;gap:14px;height:300px}
+.bar{display:flex;flex-direction:column;align-items:center;gap:8px;height:100%}
+.tube{position:relative;width:46px;flex:1;border:2.5px solid var(--line);border-radius:10px;overflow:hidden}
+.tube .lvl{position:absolute;left:0;right:0;bottom:0;background:var(--fill)}
+.bar b{font-size:16px}.bar span{font-size:12px;color:var(--muted);text-align:center}
+.pct{text-align:center;margin-top:12px;font-size:13px;color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:14px;margin-top:6px}td{padding:6px 0;border-bottom:1px solid var(--grid)}
+td:last-child{text-align:right;font-variant-numeric:tabular-nums}.up{color:var(--fill-ink)}.down{color:var(--warn)}
+.note{background:var(--card);border-left:4px solid var(--warn);padding:10px 14px;border-radius:8px;margin-bottom:16px;font-size:14px}
+.empty{color:var(--muted);padding:60px 0;text-align:center}
+.tip{font-size:12px;fill:var(--muted)}
+</style></head><body><main>
+<h1>Realtime tracker</h1>
+<p class="sub" id="sub"></p>
+<div id="note"></div>
+<div class="wrap">
+  <div class="card"><h2>48-hour views, all channels</h2><div id="chart"></div></div>
+  <div class="card"><h2>Today vs goal</h2>
+    <div class="bars">
+      <div class="bar"><div class="tube"><div class="lvl" id="lvlNow"></div></div><b id="now">-</b><span>today's realtime</span></div>
+      <div class="bar"><div class="tube"><div class="lvl" style="height:100%"></div></div><b id="goal">-</b><span>goal realtime</span></div>
+    </div>
+    <div class="pct" id="pct"></div>
+  </div>
+</div>
+<div class="card" style="margin-top:16px"><h2>Latest reading by channel</h2><table id="tbl"></table></div>
+</main>
+<script>
+const D={"history": [{"date": "2026-10-17", "time": "", "total": 2699482, "channels": {"Infi Edits": 958104, "Roblox 3D": 121835, "Living Doodle": 1464115, "Loxric": 96, "Infi's 3D": 155332}, "missing": [], "source": "api", "window": "2026-10-16 to 2026-10-17"}, {"date": "2026-10-19", "time": "", "total": 5172144, "channels": {"Infi Edits": 606580, "Roblox 3D": 799132, "Living Doodle": 3572006, "Loxric": 104, "Infi's 3D": 194322}, "missing": [], "source": "api", "window": "2026-10-18 to 2026-10-19"}, {"date": "2026-10-21", "time": "", "total": 4829950, "channels": {"Infi Edits": 217716, "Roblox 3D": 1486316, "Living Doodle": 1898550, "Loxric": 78, "Infi's 3D": 1227290}, "missing": [], "source": "api", "window": "2026-10-20 to 2026-10-21"}, {"date": "2026-10-23", "time": "", "total": 4907071, "channels": {"Infi Edits": 242751, "Roblox 3D": 1638959, "Living Doodle": 1481923, "Loxric": 66, "Infi's 3D": 1543372}, "missing": [], "source": "api", "window": "2026-10-22 to 2026-10-23"}, {"date": "2026-10-25", "time": "", "total": 3483294, "channels": {"Infi Edits": 110988, "Roblox 3D": 535615, "Living Doodle": 1698199, "Loxric": 81, "Infi's 3D": 1138411}, "missing": [], "source": "api", "window": "2026-10-24 to 2026-10-25"}, {"date": "2026-10-27", "time": "", "total": 1804021, "channels": {"Infi Edits": 61696, "Roblox 3D": 369002, "Living Doodle": 1113391, "Loxric": 65, "Infi's 3D": 259867}, "missing": [], "source": "api", "window": "2026-10-26 to 2026-10-27"}, {"date": "2026-10-29", "time": "", "total": 1817169, "channels": {"Infi Edits": 71663, "Roblox 3D": 521977, "Living Doodle": 924819, "Loxric": 1152, "Infi's 3D": 297558}, "missing": [], "source": "api", "window": "2026-10-28 to 2026-10-29"}, {"date": "2026-10-31", "time": "", "total": 2930382, "channels": {"Infi Edits": 53076, "Roblox 3D": 478333, "Living Doodle": 2119811, "Loxric": 421, "Infi's 3D": 278741}, "missing": [], "source": "api", "window": "2026-10-30 to 2026-10-31"}, {"date": "2026-11-02", "time": "", "total": 2565036, "channels": {"Infi Edits": 81033, "Roblox 3D": 370256, "Living Doodle": 1730424, "Loxric": 161, "Infi's 3D": 383162}, "missing": [], "source": "api", "window": "2026-11-01 to 2026-11-02"}, {"date": "2026-11-04", "time": "", "total": 1943275, "channels": {"Infi Edits": 108101, "Roblox 3D": 551890, "Living Doodle": 753167, "Loxric": 82, "Infi's 3D": 530035}, "missing": [], "source": "api", "window": "2026-11-03 to 2026-11-04"}, {"date": "2026-11-06", "time": "", "total": 2986075, "channels": {"Infi Edits": 566889, "Roblox 3D": 918387, "Living Doodle": 866542, "Loxric": 558, "Infi's 3D": 633699}, "missing": [], "source": "api", "window": "2026-11-05 to 2026-11-06"}, {"date": "2026-11-08", "time": "", "total": 3687786, "channels": {"Infi Edits": 347882, "Roblox 3D": 1402877, "Living Doodle": 987516, "Loxric": 6301, "Infi's 3D": 943210}, "missing": [], "source": "api", "window": "2026-11-07 to 2026-11-08"}, {"date": "2026-11-10", "time": "", "total": 3269918, "channels": {"Infi Edits": 149589, "Roblox 3D": 1150008, "Living Doodle": 1459225, "Loxric": 2359, "Infi's 3D": 508737}, "missing": [], "source": "api", "window": "2026-11-09 to 2026-11-10"}, {"date": "2026-11-12", "time": "", "total": 2288649, "channels": {"Infi Edits": 162253, "Roblox 3D": 73849, "Living Doodle": 1261663, "Loxric": 69908, "Infi's 3D": 720976}, "missing": [], "source": "api", "window": "2026-11-11 to 2026-11-12"}, {"date": "2026-11-14", "time": "", "total": 2800197, "channels": {"Infi Edits": 368724, "Roblox 3D": 92618, "Living Doodle": 1087671, "Loxric": 452438, "Infi's 3D": 798746}, "missing": [], "source": "api", "window": "2026-11-13 to 2026-11-14"}, {"date": "2026-11-17", "time": "07:48", "total": 4410617, "channels": {"Living Doodle": 1208689, "Infi Edits": 2558802, "Roblox 3D": 102850, "Loxric": 29661, "Infi's 3D": 510615}, "missing": []}], "goal": 120000000, "channels": ["Infi Edits", "Roblox 3D", "Living Doodle", "Loxric", "Infi's 3D"], "note": null, "built": "17 Nov 2026, 07:55"};
+const fmt=n=>n>=1e6?(n/1e6).toFixed(n>=1e7?1:2)+'M':n>=1e3?Math.round(n/1e3)+'K':String(n);
+const H=D.history, last=H[H.length-1], prev=H[H.length-2];
+document.getElementById('sub').textContent=`Studio's 48-hour views summed across ${D.channels.length} channels, every 2 days. Points before ${(H.find(h=>h.source!=='api')||{date:'today'}).date} are 2-day views from YouTube Analytics. Page built ${D.built}.`;
+if(D.note) document.getElementById('note').innerHTML=`<div class="note">Last update failed: ${D.note} Showing the previous reading.</div>`;
+document.getElementById('goal').textContent=fmt(D.goal);
+if(!last){document.getElementById('chart').innerHTML='<div class="empty">No readings yet.</div>';}
+else{
+  const p=Math.min(100,last.total/D.goal*100);
+  document.getElementById('lvlNow').style.height=p+'%';
+  document.getElementById('now').textContent=fmt(last.total);
+  let ch=prev?` · ${last.total>=prev.total?'▲':'▼'} ${fmt(Math.abs(last.total-prev.total))} vs last reading`:'';
+  document.getElementById('pct').textContent=`${(last.total/D.goal*100).toFixed(0)}% of goal${ch}`;
+  // line chart
+  const W=760,Ht=360,L=56,R=16,T=16,B=40, max=Math.max(...H.map(h=>h.total))*1.15;
+  const x=i=>H.length<2?L+(W-L-R)/2:L+i*(W-L-R)/(H.length-1), y=v=>T+(Ht-T-B)*(1-v/max);
+  let s=`<svg viewBox="0 0 ${W} ${Ht}" role="img" aria-label="48-hour views over time">`;
+  for(let k=0;k<=4;k++){const v=max*k/4;s+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--grid)"/><text class="tip" x="${L-8}" y="${y(v)+4}" text-anchor="end">${fmt(v)}</text>`;}
+  if(D.goal<=max) s+=`<line x1="${L}" x2="${W-R}" y1="${y(D.goal)}" y2="${y(D.goal)}" stroke="var(--fill)" stroke-width="2" stroke-dasharray="6 5"/><text class="tip" x="${W-R}" y="${y(D.goal)-6}" text-anchor="end">goal</text>`;
+  s+=`<line x1="${L}" x2="${L}" y1="${T}" y2="${Ht-B}" stroke="var(--line)" stroke-width="2"/><line x1="${L}" x2="${W-R}" y1="${Ht-B}" y2="${Ht-B}" stroke="var(--line)" stroke-width="2"/>`;
+  s+=`<polyline fill="none" stroke="var(--line)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" points="${H.map((h,i)=>x(i)+','+y(h.total)).join(' ')}"/>`;
+  const every=Math.ceil(H.length/8);
+  H.forEach((h,i)=>{const d=new Date(h.date+'T00:00');
+    s+=`<circle cx="${x(i)}" cy="${y(h.total)}" r="4.5" fill="var(--card)" stroke="var(--line)" stroke-width="2.5"><title>${h.window||h.date}: ${h.total.toLocaleString('en-IN')} views${h.source==='api'?' (from Analytics)':' (Studio realtime)'}</title></circle>`;
+    if(i%every===0||i===H.length-1) s+=`<text class="tip" x="${x(i)}" y="${Ht-B+20}" text-anchor="middle">${d.toLocaleDateString('en-GB',{day:'numeric',month:'short'})}</text>`;});
+  document.getElementById('chart').innerHTML=s+'</svg>';
+  // table
+  const rows=Object.entries(last.channels).sort((a,b)=>b[1]-a[1]).map(([n,v])=>{
+    let d='';if(prev&&prev.channels[n]!=null){const c=v-prev.channels[n];d=` <span class="${c>=0?'up':'down'}">${c>=0?'▲':'▼'} ${fmt(Math.abs(c))}</span>`;}
+    return `<tr><td>${n}</td><td>${fmt(v)}${d}</td></tr>`;});
+  (last.missing||[]).forEach(n=>rows.push(`<tr><td>${n}</td><td style="color:var(--muted)">not read</td></tr>`));
+  document.getElementById('tbl').innerHTML=rows.join('')+`<tr><td><b>Total</b> <span style="color:var(--muted);font-size:12px">${last.date} ${last.time}</span></td><td><b>${fmt(last.total)}</b></td></tr>`;
+}
+</script></body></html>
